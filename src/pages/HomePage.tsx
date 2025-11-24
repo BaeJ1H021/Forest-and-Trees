@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import {
   Footer,
+  GardenWork,
   HomeHeader,
   LandscapeMaintenanceSection,
   QuoteBanner,
@@ -14,6 +15,7 @@ const HomePage = () => {
       <QuoteBanner />
       <LandscapeMaintenanceSection />
       <TreeHospitalSection />
+      <GardenWork />
       <Footer />
     </HomePageContainer>
   );
