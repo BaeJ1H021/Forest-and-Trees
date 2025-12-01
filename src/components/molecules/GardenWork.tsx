@@ -102,7 +102,7 @@ export default function GardenWork() {
 
 const Wrapper = styled.div`
   width: 100%;
-  padding: 320px 360px;
+  padding: 320px 50px;
 
   @media (max-width: 768px) {
     padding: 180px 20px;

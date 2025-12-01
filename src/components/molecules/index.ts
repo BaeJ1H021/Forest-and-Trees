@@ -5,6 +5,7 @@ import QuoteBanner from './QuoteBanner';
 import LandscapeMaintenanceSection from './LandscapeMaintenanceSection';
 import TreeHospitalSection from './TreeHospitalSection';
 import GardenWork from './GardenWork';
+import TrimmingMowingSection from './TrimmingMowingSection';
 
 export {
   HomeHeader,
@@ -14,4 +15,5 @@ export {
   LandscapeMaintenanceSection,
   TreeHospitalSection,
   GardenWork,
+  TrimmingMowingSection,
 };

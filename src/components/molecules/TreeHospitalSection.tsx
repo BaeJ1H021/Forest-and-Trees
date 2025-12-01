@@ -44,7 +44,7 @@ const Section = styled.section`
   position: relative;
   width: 100%;
   background-color: #f8fff8;
-  padding: 128px 0 150px;
+  padding: 128px 50px 150px;
 
   @media (max-width: 768px) {
     padding: 180px 20px;

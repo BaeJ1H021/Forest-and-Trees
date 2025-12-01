@@ -6,6 +6,7 @@ import {
   LandscapeMaintenanceSection,
   QuoteBanner,
   TreeHospitalSection,
+  TrimmingMowingSection,
 } from '../components/molecules';
 
 const HomePage = () => {
@@ -16,6 +17,7 @@ const HomePage = () => {
       <LandscapeMaintenanceSection />
       <TreeHospitalSection />
       <GardenWork />
+      <TrimmingMowingSection />
       <Footer />
     </HomePageContainer>
   );
