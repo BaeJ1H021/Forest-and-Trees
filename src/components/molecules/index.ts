@@ -6,6 +6,8 @@ import LandscapeMaintenanceSection from './LandscapeMaintenanceSection';
 import TreeHospitalSection from './TreeHospitalSection';
 import GardenWork from './GardenWork';
 import TrimmingMowingSection from './TrimmingMowingSection';
+import FacilityConstructionSection from './FacilityConstructionSection';
+import ArtificialConstructionSection from './ArtificialConstructionSection';
 
 export {
   HomeHeader,
@@ -16,4 +18,6 @@ export {
   TreeHospitalSection,
   GardenWork,
   TrimmingMowingSection,
+  FacilityConstructionSection,
+  ArtificialConstructionSection,
 };

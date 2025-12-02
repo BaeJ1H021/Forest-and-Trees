@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 import {
+  ArtificialConstructionSection,
+  FacilityConstructionSection,
   Footer,
   GardenWork,
   HomeHeader,
@@ -18,6 +20,8 @@ const HomePage = () => {
       <TreeHospitalSection />
       <GardenWork />
       <TrimmingMowingSection />
+      <FacilityConstructionSection />
+      <ArtificialConstructionSection />
       <Footer />
     </HomePageContainer>
   );
