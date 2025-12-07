@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import {
   ArtificialConstructionSection,
+  BlogCTASection,
   FacilityConstructionSection,
   GardenWork,
   HomeHeader,
@@ -23,6 +24,7 @@ const HomePage = () => {
       <FacilityConstructionSection />
       <ArtificialConstructionSection />
       <TimeLandscapeVideoSection />
+      <BlogCTASection />
     </HomePageContainer>
   );
 };

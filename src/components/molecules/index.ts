@@ -7,6 +7,7 @@ import TrimmingMowingSection from './TrimmingMowingSection';
 import FacilityConstructionSection from './FacilityConstructionSection';
 import ArtificialConstructionSection from './ArtificialConstructionSection';
 import TimeLandscapeVideoSection from './TimeLandscapeVideoSection';
+import BlogCTASection from './BlogCTASection';
 
 export {
   HomeHeader,
@@ -18,4 +19,5 @@ export {
   FacilityConstructionSection,
   ArtificialConstructionSection,
   TimeLandscapeVideoSection,
+  BlogCTASection,
 };
