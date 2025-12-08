@@ -44,14 +44,14 @@ const ImageContainer = styled.div`
 const BackgroundImage = styled.div`
   width: 100%;
   height: 911px;
-  background-image: url('images/header_img.png');
+  background-image: url('images/header_img.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
 
   @media (max-width: 768px) {
-    background-image: url('images/mobile_header_img.png');
+    background-image: url('images/mobile_header_img.webp');
     height: 780px;
   }
 `;

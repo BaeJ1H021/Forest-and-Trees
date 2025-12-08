@@ -20,26 +20,41 @@ export default function GardenWork() {
 
   // ------------------------ DESKTOP ARROWS ------------------------
   const onPrev = () => {
-    setIndex((prev) => (prev === 0 ? maxDesktopIndex - 1 : prev - 1));
+    setIndex((prev) => {
+      if (prev === 0) return prev; // 맨 왼쪽 → 그대로
+      return prev - 1;
+    });
   };
+
   const onNext = () => {
-    setIndex((prev) => (prev === maxDesktopIndex - 1 ? 0 : prev + 1));
+    setIndex((prev) => {
+      if (prev === maxDesktopIndex - 1) return prev; // 맨 오른쪽 → 그대로
+      return prev + 1;
+    });
   };
 
   // ------------------------ MOBILE SWIPE ------------------------
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
+
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
+
     const diff = e.changedTouches[0].clientX - touchStartX.current;
 
     if (diff > 50) {
       // 오른쪽 → 왼쪽 swipe: 이전
-      setIndex((prev) => (prev === 0 ? IMAGES.length - 1 : prev - 1));
+      setIndex((prev) => {
+        if (prev === 0) return prev; // 맨 처음이면 멈춤
+        return prev - 1;
+      });
     } else if (diff < -50) {
-      // 왼쪽 → 오른쪽: 다음
-      setIndex((prev) => (prev === IMAGES.length - 1 ? 0 : prev + 1));
+      // 왼쪽 → 오른쪽 swipe: 다음
+      setIndex((prev) => {
+        if (prev === IMAGES.length - 1) return prev; // 맨 끝이면 멈춤
+        return prev + 1;
+      });
     }
   };
 

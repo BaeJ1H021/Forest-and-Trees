@@ -19,11 +19,18 @@ export default function FacilityConstructionSection() {
   const [pcIndex, setPcIndex] = useState(0);
   const maxPcIndex = Math.ceil(TOP_IMAGES.length / 4);
 
+  // 맨 왼쪽/오른쪽에서 더 이상 못 가게 막기
   const prevPc = () =>
-    setPcIndex((prev) => (prev === 0 ? maxPcIndex - 1 : prev - 1));
+    setPcIndex((prev) => {
+      if (prev === 0) return prev; // 첫 페이지 → 그대로
+      return prev - 1;
+    });
 
   const nextPc = () =>
-    setPcIndex((prev) => (prev === maxPcIndex - 1 ? 0 : prev + 1));
+    setPcIndex((prev) => {
+      if (prev === maxPcIndex - 1) return prev; // 마지막 페이지 → 그대로
+      return prev + 1;
+    });
 
   /* ---------------------------- 모바일 슬라이드 (4장씩, 2x2) ---------------------------- */
   const [mobileIndex, setMobileIndex] = useState(0);
@@ -33,16 +40,23 @@ export default function FacilityConstructionSection() {
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
+
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
     const diff = e.changedTouches[0].clientX - touchStartX.current;
 
     if (diff > 50) {
       // 이전 그룹
-      setMobileIndex((prev) => (prev === 0 ? maxMobileIndex - 1 : prev - 1));
+      setMobileIndex((prev) => {
+        if (prev === 0) return prev; // 첫 그룹이면 멈춤
+        return prev - 1;
+      });
     } else if (diff < -50) {
       // 다음 그룹
-      setMobileIndex((prev) => (prev === maxMobileIndex - 1 ? 0 : prev + 1));
+      setMobileIndex((prev) => {
+        if (prev === maxMobileIndex - 1) return prev; // 마지막 그룹이면 멈춤
+        return prev + 1;
+      });
     }
   };
 

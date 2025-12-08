@@ -24,10 +24,11 @@ export default function TimeLandscapeVideoSection() {
     desktopVideoRefs.current.forEach((v) => v && v.pause());
     mobileVideoRefs.current.forEach((v) => v && v.pause());
   };
-
   /* ---------- PC 이동 ---------- */
   const goPrev = () => {
-    const next = index === 0 ? len - 1 : index - 1;
+    if (index === 0) return; // 맨 앞이면 이동 없음
+
+    const next = index - 1;
     setIndex(next);
     setMobileIndex(next);
     pauseAllVideos();
@@ -35,7 +36,9 @@ export default function TimeLandscapeVideoSection() {
   };
 
   const goNext = () => {
-    const next = index === len - 1 ? 0 : index + 1;
+    if (index === len - 1) return; // 맨 뒤이면 이동 없음
+
+    const next = index + 1;
     setIndex(next);
     setMobileIndex(next);
     pauseAllVideos();
@@ -56,9 +59,13 @@ export default function TimeLandscapeVideoSection() {
     let next = mobileIndex;
 
     if (diff > 50) {
-      next = mobileIndex === 0 ? len - 1 : mobileIndex - 1;
+      // 이전 (오른쪽 → 왼쪽 스와이프)
+      if (mobileIndex === 0) return; // 첫 페이지면 멈춤
+      next = mobileIndex - 1;
     } else if (diff < -50) {
-      next = mobileIndex === len - 1 ? 0 : mobileIndex + 1;
+      // 다음 (왼쪽 → 오른쪽 스와이프)
+      if (mobileIndex === len - 1) return; // 마지막 페이지면 멈춤
+      next = mobileIndex + 1;
     } else {
       return;
     }
