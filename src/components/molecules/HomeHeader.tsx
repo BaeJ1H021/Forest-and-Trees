@@ -64,6 +64,8 @@ const CertificateImage = styled.img`
   height: auto;
   z-index: 4;
 
+  filter: blur(12px) brightness(1.3); /* 흐림 + 약간 밝게 */
+
   @media (max-width: 1700px) {
     top: 18%; /* 조금 위로 올리고 */
     right: 8%; /* 더 안쪽으로 붙이고 */
