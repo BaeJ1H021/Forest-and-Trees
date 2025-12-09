@@ -1,6 +1,7 @@
 // src/components/TrimmingMowingSection.tsx
 import React, { useState, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 type BeforeAfterKey = 'before' | 'ongoing' | 'after';
 
@@ -67,8 +68,6 @@ export default function TrimmingMowingSection() {
 
   /* ---------------------------- 모바일 슬라이드 (4장씩, 2x2) ---------------------------- */
 
-  /* ---------------------------- 모바일 슬라이드 (4장씩, 2x2) ---------------------------- */
-
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -96,11 +95,19 @@ export default function TrimmingMowingSection() {
   /* ---------------------------- 모바일 BA 탭 ---------------------------- */
   const [baMobileTab, setBaMobileTab] = useState<BeforeAfterKey>('before');
 
+  /* ---------------------------- inView 훅 ---------------------------- */
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: pcRef, inView: pcInView } = useInViewOnce();
+  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
+  const { ref: baHeaderRef, inView: baHeaderInView } = useInViewOnce();
+  const { ref: baMobileRef, inView: baMobileInView } = useInViewOnce();
+  const { ref: baDesktopRef, inView: baDesktopInView } = useInViewOnce();
+
   return (
     <Section>
       <Inner>
         {/* ------------------- TEXT ------------------- */}
-        <TextBlock>
+        <TextBlock ref={textRef} $inView={textInView}>
           <Title>전지 및 예초공사</Title>
           <SubTitle>수목 전지, 잔디예초, 제초 작업</SubTitle>
 
@@ -116,7 +123,7 @@ export default function TrimmingMowingSection() {
         </TextBlock>
 
         {/* ------------------- PC 슬라이드 ------------------- */}
-        <PcSliderWrapper>
+        <PcSliderWrapper ref={pcRef} $inView={pcInView}>
           <ArrowLeft onClick={prevPc} />
           <ArrowRight onClick={nextPc} />
 
@@ -139,6 +146,8 @@ export default function TrimmingMowingSection() {
 
         {/* ------------------- MOBILE 슬라이드 (2x2) ------------------- */}
         <MobileSliderWrapper
+          ref={mobileRef}
+          $inView={mobileInView}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -168,13 +177,13 @@ export default function TrimmingMowingSection() {
         </MobileDots>
 
         {/* ------------------- Before & After 제목 ------------------- */}
-        <BAHeader>
+        <BAHeader ref={baHeaderRef} $inView={baHeaderInView}>
           <BATitle>Before& After</BATitle>
           <Underline />
         </BAHeader>
 
         {/* ------------------- MOBILE BA (탭 + 1장) ------------------- */}
-        <MobileBA>
+        <MobileBA ref={baMobileRef} $inView={baMobileInView}>
           <Tabs>
             {BEFORE_AFTER_ITEMS.map((item) => (
               <Tab
@@ -193,7 +202,7 @@ export default function TrimmingMowingSection() {
         </MobileBA>
 
         {/* ------------------- PC BA (Before 2x2 → 화살표 → After 2x2) ------------------- */}
-        <DesktopBA>
+        <DesktopBA ref={baDesktopRef} $inView={baDesktopInView}>
           <BAWebRow>
             {/* BEFORE 2x2 + 캡션 */}
             <BAWebCol>
@@ -224,6 +233,23 @@ export default function TrimmingMowingSection() {
   );
 }
 
+/* ------------------ 공통 fade-up 믹스인 ------------------ */
+
+const fadeUpMixin = css<{ $inView?: boolean }>`
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
+`;
+
 /* ------------------ STYLES ------------------ */
 
 const Section = styled.section`
@@ -243,8 +269,9 @@ const Inner = styled.div`
   max-width: 1200px;
 `;
 
-const TextBlock = styled.div`
+const TextBlock = styled.div<{ $inView?: boolean }>`
   margin-bottom: 64px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     text-align: center;
@@ -298,10 +325,11 @@ const MobileBr = styled.br`
 
 /* ------------------- PC SLIDER ------------------- */
 
-const PcSliderWrapper = styled.div`
+const PcSliderWrapper = styled.div<{ $inView?: boolean }>`
   position: relative;
   max-width: 1200px;
   margin: 0 auto 80px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     display: none;
@@ -352,13 +380,14 @@ const ArrowRight = styled(ArrowLeft)`
 
 /* ------------------- MOBILE SLIDER ------------------- */
 
-const MobileSliderWrapper = styled.div`
+const MobileSliderWrapper = styled.div<{ $inView?: boolean }>`
   display: none;
 
   @media (max-width: 768px) {
     display: block;
     overflow: hidden;
     width: 100%;
+    ${fadeUpMixin};
   }
 `;
 
@@ -368,7 +397,6 @@ const MobileSlider = styled.div`
   transition: transform 0.35s ease-out;
 `;
 
-/* 한 슬라이드(2x2) */
 const MobileGrid = styled.div`
   flex: 0 0 100%;
   display: grid;
@@ -402,9 +430,10 @@ const Dot = styled.div<{ active: boolean }>`
 
 /* ------------------- BA COMMON ------------------- */
 
-const BAHeader = styled.div`
+const BAHeader = styled.div<{ $inView?: boolean }>`
   text-align: center;
   margin: 120px 0 40px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     margin: 68px 0 54px;
@@ -427,9 +456,13 @@ const Underline = styled.div`
 
 /* ------------------- MOBILE BA ------------------- */
 
-const MobileBA = styled.div`
+const MobileBA = styled.div<{ $inView?: boolean }>`
   @media (min-width: 769px) {
     display: none;
+  }
+
+  @media (max-width: 768px) {
+    ${fadeUpMixin};
   }
 `;
 
@@ -459,16 +492,16 @@ const BAImage = styled.img`
 
 /* ------------------- PC BA ------------------- */
 
-const DesktopBA = styled.div`
+const DesktopBA = styled.div<{ $inView?: boolean }>`
   display: none;
 
   @media (min-width: 769px) {
     display: block;
     margin-top: 40px;
+    ${fadeUpMixin};
   }
 `;
 
-/* 3열: BEFORE 컬럼 | 화살표 | AFTER 컬럼 */
 const BAWebRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 80px 1fr;
@@ -476,14 +509,12 @@ const BAWebRow = styled.div`
   align-items: center;
 `;
 
-/* BEFORE / AFTER 컬럼: 그리드 + 캡션 세로 배치 */
 const BAWebCol = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center; /* 그리드 기준 수평 중앙 정렬 */
+  align-items: center;
 `;
 
-/* BEFORE / AFTER 각각 2x2 */
 const BAWebGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);

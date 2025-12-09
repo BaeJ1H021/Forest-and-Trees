@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
-import styled from 'styled-components';
+import React, { useState, useRef, useEffect } from 'react';
+import styled, { css } from 'styled-components';
+import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 const IMAGES = [
   '/images/garden_work/1.png',
@@ -13,10 +14,36 @@ const IMAGES = [
 ];
 
 export default function GardenWork() {
-  const [index, setIndex] = useState(0); // 데스크탑: 0,1,2 슬라이드 / 모바일: 이미지 인덱스
+  const [index, setIndex] = useState(0); // 데스크탑: 그룹 인덱스 / 모바일: 이미지 인덱스
   const touchStartX = useRef<number | null>(null);
 
   const maxDesktopIndex = Math.floor(IMAGES.length / 4); // 4장씩
+
+  // ✅ 현재 뷰포트가 모바일인지 여부
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ✅ PC <-> 모바일 전환 시 인덱스 초기화
+  useEffect(() => {
+    setIndex(0);
+  }, [isMobile]);
+
+  // ✅ 인뷰 상태 훅
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: desktopRef, inView: desktopInView } = useInViewOnce();
+  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
 
   // ------------------------ DESKTOP ARROWS ------------------------
   const onPrev = () => {
@@ -60,58 +87,84 @@ export default function GardenWork() {
 
   return (
     <Wrapper>
-      {/* -------------------------- TEXT SECTION -------------------------- */}
       <Inner>
-        <Title>정원공사</Title>
-        <SubTitle>카페, 학교, 법인 회사, 전원주택, 정원공사</SubTitle>
-        <Description>
-          쉼과 산책로/숲길 학교정원, 나무와 꽃이 <MobileBr /> 어우러진 포토존
-          카페정원, 잡초 관리가 어려운 <br /> 법인회사 드라이정원 등 나무, 석주,
-          이끼, 바위술 등 <MobileBr />
-          다양한 소재로 완성도 높은 공간창출
-        </Description>
-      </Inner>
+        {/* 텍스트 블럭 fade-up */}
+        <TextBlock ref={textRef} $inView={textInView}>
+          <Title>정원공사</Title>
+          <SubTitle>카페, 학교, 법인 회사, 전원주택, 정원공사</SubTitle>
+          <Description>
+            쉼과 산책로/숲길 학교정원, 나무와 꽃이 <MobileBr /> 어우러진 포토존
+            카페정원, 잡초 관리가 어려운 <br /> 법인회사 드라이정원 등 나무,
+            석주, 이끼, 바위술 등 <MobileBr />
+            다양한 소재로 완성도 높은 공간창출
+          </Description>
+        </TextBlock>
 
-      {/* -------------------------- DESKTOP VIEW -------------------------- */}
-      <DesktopContainer>
-        <ArrowLeft onClick={onPrev} />
-        <ArrowRight onClick={onNext} />
+        {/* -------------------------- DESKTOP VIEW -------------------------- */}
+        <DesktopContainer ref={desktopRef} $inView={desktopInView}>
+          <ArrowLeft onClick={onPrev} />
+          <ArrowRight onClick={onNext} />
 
-        <DesktopViewport>
-          <DesktopSlider style={{ transform: `translateX(-${index * 100}%)` }}>
-            {Array.from({ length: maxDesktopIndex }).map((_, groupIndex) => (
-              <ImageGroup key={groupIndex}>
-                {IMAGES.slice(groupIndex * 4, groupIndex * 4 + 4).map(
-                  (src, i) => (
-                    <ImageItem key={i}>
-                      <img src={src} alt={`정원 이미지 ${i}`} />
-                    </ImageItem>
-                  ),
-                )}
-              </ImageGroup>
+          <DesktopViewport>
+            <DesktopSlider
+              style={{ transform: `translateX(-${index * 100}%)` }}
+            >
+              {Array.from({ length: maxDesktopIndex }).map((_, groupIndex) => (
+                <ImageGroup key={groupIndex}>
+                  {IMAGES.slice(groupIndex * 4, groupIndex * 4 + 4).map(
+                    (src, i) => (
+                      <ImageItem key={i}>
+                        <img src={src} alt={`정원 이미지 ${i}`} />
+                      </ImageItem>
+                    ),
+                  )}
+                </ImageGroup>
+              ))}
+            </DesktopSlider>
+          </DesktopViewport>
+        </DesktopContainer>
+
+        {/* -------------------------- MOBILE VIEW -------------------------- */}
+        <MobileContainer
+          ref={mobileRef}
+          $inView={mobileInView}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <MobileSlider style={{ transform: `translateX(-${index * 100}%)` }}>
+            {IMAGES.map((src, i) => (
+              <MobileImage key={i} src={src} />
             ))}
-          </DesktopSlider>
-        </DesktopViewport>
-      </DesktopContainer>
+          </MobileSlider>
 
-      {/* -------------------------- MOBILE VIEW -------------------------- */}
-      <MobileContainer onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-        <MobileSlider style={{ transform: `translateX(-${index * 100}%)` }}>
-          {IMAGES.map((src, i) => (
-            <MobileImage key={i} src={src} />
-          ))}
-        </MobileSlider>
-      </MobileContainer>
-
-      {/* 모바일 인디케이터 */}
-      <MobileDots>
-        {IMAGES.map((_, i) => (
-          <Dot key={i} active={i === index} />
-        ))}
-      </MobileDots>
+          {/* 모바일 인디케이터 */}
+          <MobileDots>
+            {IMAGES.map((_, i) => (
+              <Dot key={i} active={i === index} />
+            ))}
+          </MobileDots>
+        </MobileContainer>
+      </Inner>
     </Wrapper>
   );
 }
+
+/* ----------------- 공통 fade-up 믹스인 ----------------- */
+
+const fadeUpMixin = css<{ $inView?: boolean }>`
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
+`;
 
 /* ----------------- STYLES ----------------- */
 
@@ -131,6 +184,11 @@ const Inner = styled.div`
   @media (max-width: 768px) {
     text-align: center;
   }
+`;
+
+/** 텍스트 영역 전체를 fade-up */
+const TextBlock = styled.div<{ $inView?: boolean }>`
+  ${fadeUpMixin};
 `;
 
 const Title = styled.h2`
@@ -173,11 +231,12 @@ const Description = styled.p`
 
 /* ----------------- DESKTOP ----------------- */
 
-const DesktopContainer = styled.div`
+const DesktopContainer = styled.div<{ $inView?: boolean }>`
   position: relative; /* 화살표 기준점 */
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     display: none;
@@ -211,7 +270,7 @@ const ImageItem = styled.div`
   }
 `;
 
-/* 화살표: grid(DesktopContainer) 기준 중앙, 양쪽 100px */
+/* 화살표: DesktopContainer 기준 중앙, 양쪽 100px */
 const ArrowLeft = styled.button`
   position: absolute;
   top: 50%;
@@ -248,13 +307,14 @@ const ArrowRight = styled.button`
 
 /* ----------------- MOBILE ----------------- */
 
-const MobileContainer = styled.div`
+const MobileContainer = styled.div<{ $inView?: boolean }>`
   display: none;
 
   @media (max-width: 768px) {
     display: block;
     width: 100%;
     overflow: hidden;
+    ${fadeUpMixin};
   }
 `;
 

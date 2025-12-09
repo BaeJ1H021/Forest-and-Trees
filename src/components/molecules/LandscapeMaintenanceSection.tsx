@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 type BeforeAfterKey = 'before' | 'middle' | 'after';
 
@@ -32,11 +33,16 @@ export default function LandscapeMaintenanceSection() {
     { key: 'after', label: '작업후', src: beforeAfterImages.after },
   ];
 
+  // ✅ 스크롤 인뷰 훅
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: workRef, inView: workInView } = useInViewOnce();
+  const { ref: baRef, inView: baInView } = useInViewOnce();
+
   return (
     <Section>
       <Inner>
         {/* 상단 타이틀/설명 */}
-        <TextBlock>
+        <TextBlock ref={textRef} $inView={textInView}>
           <Title>조경 유지관리</Title>
           <SubTitle>
             연간 수목전지, 병해충 방제,
@@ -53,7 +59,7 @@ export default function LandscapeMaintenanceSection() {
         </TextBlock>
 
         {/* 작업 이미지 4장 */}
-        <WorkGrid>
+        <WorkGrid ref={workRef} $inView={workInView}>
           {workImages.map((src, idx) => (
             <WorkImageWrapper key={idx}>
               <WorkImage src={src} alt={`작업 사진 ${idx + 1}`} />
@@ -62,7 +68,7 @@ export default function LandscapeMaintenanceSection() {
         </WorkGrid>
 
         {/* Before & After */}
-        <BeforeAfterSection>
+        <BeforeAfterSection ref={baRef} $inView={baInView}>
           <BAHeader>
             <BATitle>Before& After</BATitle>
             <Underline />
@@ -112,6 +118,23 @@ export default function LandscapeMaintenanceSection() {
   );
 }
 
+/* ===== 애니메이션 공통 스타일 믹스인 ===== */
+
+const fadeUpMixin = css<{ $inView?: boolean }>`
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
+`;
+
 /* ===== styled-components ===== */
 
 const Section = styled.section`
@@ -131,9 +154,10 @@ const Inner = styled.div`
 `;
 
 /* 상단 텍스트 영역 */
-const TextBlock = styled.div`
+const TextBlock = styled.div<{ $inView?: boolean }>`
   max-width: 520px;
   margin-bottom: 64px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     margin: 0 auto 64px;
@@ -170,17 +194,15 @@ const Description = styled.p`
   font-size: 16px;
   line-height: 1.6;
   color: #8e8e8e;
-
-  @media (max-width: 768px) {
-  }
 `;
 
 /* 작업 이미지 4장 그리드 */
-const WorkGrid = styled.div`
+const WorkGrid = styled.div<{ $inView?: boolean }>`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
   margin-bottom: 80px;
+  ${fadeUpMixin};
 
   @media (max-width: 1024px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -208,8 +230,9 @@ const WorkImage = styled.img`
 
 /* Before & After 공통 영역 */
 
-const BeforeAfterSection = styled.section`
+const BeforeAfterSection = styled.section<{ $inView?: boolean }>`
   margin-top: 24px;
+  ${fadeUpMixin};
 `;
 
 const BAHeader = styled.div`
@@ -328,6 +351,6 @@ const MobileSpace = styled.div`
 
   @media (max-width: 768px) {
     display: block;
-    height: 25px; /* 원하는 만큼 여백 주기 (예: 20px) */
+    height: 25px;
   }
 `;

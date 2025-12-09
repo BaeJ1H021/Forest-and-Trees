@@ -1,4 +1,5 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 export default function TreeHospitalSection() {
   const workImages = [
@@ -8,11 +9,15 @@ export default function TreeHospitalSection() {
     '/images/tree_hospital/4.png',
   ];
 
+  // ✅ 텍스트 / 이미지 그리드 인뷰 상태
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: gridRef, inView: gridInView } = useInViewOnce();
+
   return (
     <Section>
       <MobileOverlay />
       <Inner>
-        <TextBlock>
+        <TextBlock ref={textRef} $inView={textInView}>
           <Title>나무병원</Title>
           <SubTitle>
             수목피해 진단 처방, 병충해 방제,
@@ -26,9 +31,9 @@ export default function TreeHospitalSection() {
           </Description>
         </TextBlock>
 
-        <ImageGrid>
+        <ImageGrid ref={gridRef} $inView={gridInView}>
           {workImages.map((src, idx) => (
-            <ImageItem key={idx}>
+            <ImageItem key={idx} $inView={gridInView} $order={idx}>
               <WorkImage src={src} alt={`나무병원 작업 사진 ${idx + 1}`} />
             </ImageItem>
           ))}
@@ -37,6 +42,23 @@ export default function TreeHospitalSection() {
     </Section>
   );
 }
+
+/* ========== 공통 애니메이션 믹스인 ========== */
+
+const fadeUpMixin = css<{ $inView?: boolean }>`
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
+`;
 
 /* ========== styled-components ========== */
 
@@ -93,9 +115,10 @@ const Inner = styled.div`
 
 /* 텍스트 영역 */
 
-const TextBlock = styled.div`
+const TextBlock = styled.div<{ $inView?: boolean }>`
   max-width: 420px;
   margin-bottom: 36px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     max-width: 100%;
@@ -145,13 +168,16 @@ const Description = styled.p`
 
 /* 이미지 그리드: PC 4열, 모바일 2열 */
 
-const ImageGrid = styled.div`
+const ImageGrid = styled.div<{ $inView?: boolean }>`
   width: 100%;
   max-width: 1200px;
 
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   column-gap: 20px;
+
+  /* 그리드 전체가 위에서 올라오는 효과 */
+  ${fadeUpMixin}
 
   @media (max-width: 1024px) {
     column-gap: 20px;
@@ -165,9 +191,25 @@ const ImageGrid = styled.div`
   }
 `;
 
-const ImageItem = styled.div`
+/* 각 이미지에 stagger 효과 추가 */
+
+const ImageItem = styled.div<{ $inView?: boolean; $order?: number }>`
   width: 100%;
   overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+  transition-delay: ${({ $order = 0 }) => $order * 0.08}s;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
 `;
 
 const WorkImage = styled.img`

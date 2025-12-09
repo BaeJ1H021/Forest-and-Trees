@@ -1,6 +1,7 @@
 // src/components/TimeLandscapeVideoSection.tsx
 import React, { useState, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 const VIDEOS = [
   '/videos/1.mp4',
@@ -10,6 +11,8 @@ const VIDEOS = [
   '/videos/5.mp4',
   '/videos/6.mp4',
 ];
+
+type DesktopPosition = 'center' | 'left' | 'right' | 'out';
 
 export default function TimeLandscapeVideoSection() {
   const [index, setIndex] = useState(0);
@@ -24,10 +27,10 @@ export default function TimeLandscapeVideoSection() {
     desktopVideoRefs.current.forEach((v) => v && v.pause());
     mobileVideoRefs.current.forEach((v) => v && v.pause());
   };
+
   /* ---------- PC 이동 ---------- */
   const goPrev = () => {
-    if (index === 0) return; // 맨 앞이면 이동 없음
-
+    if (index === 0) return;
     const next = index - 1;
     setIndex(next);
     setMobileIndex(next);
@@ -36,8 +39,7 @@ export default function TimeLandscapeVideoSection() {
   };
 
   const goNext = () => {
-    if (index === len - 1) return; // 맨 뒤이면 이동 없음
-
+    if (index === len - 1) return;
     const next = index + 1;
     setIndex(next);
     setMobileIndex(next);
@@ -59,12 +61,10 @@ export default function TimeLandscapeVideoSection() {
     let next = mobileIndex;
 
     if (diff > 50) {
-      // 이전 (오른쪽 → 왼쪽 스와이프)
-      if (mobileIndex === 0) return; // 첫 페이지면 멈춤
+      if (mobileIndex === 0) return;
       next = mobileIndex - 1;
     } else if (diff < -50) {
-      // 다음 (왼쪽 → 오른쪽 스와이프)
-      if (mobileIndex === len - 1) return; // 마지막 페이지면 멈춤
+      if (mobileIndex === len - 1) return;
       next = mobileIndex + 1;
     } else {
       return;
@@ -116,39 +116,60 @@ export default function TimeLandscapeVideoSection() {
     video.play().catch(() => {});
   };
 
+  /* ---------- inView 훅 ---------- */
+  const { ref: titleRef, inView: titleInView } = useInViewOnce();
+  const { ref: desktopRef, inView: desktopInView } = useInViewOnce();
+  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
+
+  /* ---------- Desktop 카드 위치 계산 ---------- */
+  const getPosition = (i: number): DesktopPosition => {
+    if (i === index) return 'center';
+    if (i === index - 1) return 'left';
+    if (i === index + 1) return 'right';
+    return 'out';
+  };
+
   return (
     <Section>
       <Inner>
-        <Title>시간이 만든 풍경</Title>
+        <TitleWrapper ref={titleRef} $inView={titleInView}>
+          <Title>시간이 만든 풍경</Title>
+        </TitleWrapper>
 
         {/* ================= PC ================= */}
-        <DesktopWrapper>
+        <DesktopWrapper ref={desktopRef} $inView={desktopInView}>
           <ArrowLeft onClick={goPrev} />
 
-          <DesktopViewport>
-            <DesktopTrack style={{ transform: `translateX(-${index * 100}%)` }}>
-              {VIDEOS.map((src, i) => (
-                <DesktopSlide key={i} onClick={() => playDesktopVideo(i)}>
-                  <VideoCard>
-                    <VideoPreview
-                      ref={(el) => (desktopVideoRefs.current[i] = el)}
-                      muted
-                      preload="metadata"
-                      src={src}
-                    />
-                    <Overlay
-                      hidden={
-                        playingIndex === i &&
-                        !desktopVideoRefs.current[i]?.paused
-                      }
-                    >
-                      <PlayIcon />
-                    </Overlay>
-                  </VideoCard>
-                </DesktopSlide>
-              ))}
-            </DesktopTrack>
-          </DesktopViewport>
+          <DesktopStage>
+            {VIDEOS.map((src, i) => {
+              const pos = getPosition(i);
+              const isCenter = pos === 'center';
+
+              return (
+                <DesktopCard
+                  key={i}
+                  $position={pos}
+                  onClick={() => isCenter && playDesktopVideo(i)}
+                >
+                  <VideoPreview
+                    ref={(el) => (desktopVideoRefs.current[i] = el)}
+                    muted
+                    preload="metadata"
+                    src={src}
+                  />
+                  <Overlay
+                    hidden={
+                      playingIndex === i && !desktopVideoRefs.current[i]?.paused
+                    }
+                    $position={pos}
+                  >
+                    {/* 🔽 가운데 카드일 때만 재생 아이콘 표시 */}
+                    {pos === 'center' && <PlayIcon />}
+                  </Overlay>
+                </DesktopCard>
+              );
+            })}
+          </DesktopStage>
 
           <Dots>
             {VIDEOS.map((_, i) => (
@@ -169,8 +190,7 @@ export default function TimeLandscapeVideoSection() {
         </DesktopWrapper>
 
         {/* ================= Mobile ================= */}
-        <MobileWrapper>
-          {/* 🔽 여기 래퍼 추가: overflow: hidden */}
+        <MobileWrapper ref={mobileRef} $inView={mobileInView}>
           <MobileViewport>
             <MobileSlider
               onTouchStart={onTouchStart}
@@ -179,19 +199,22 @@ export default function TimeLandscapeVideoSection() {
             >
               {VIDEOS.map((src, i) => (
                 <MobileSlide key={i} onClick={() => playMobileVideo(i)}>
-                  <VideoPreview
-                    ref={(el) => (mobileVideoRefs.current[i] = el)}
-                    muted
-                    preload="metadata"
-                    src={src}
-                  />
-                  <Overlay
-                    hidden={
-                      playingIndex === i && !mobileVideoRefs.current[i]?.paused
-                    }
-                  >
-                    <PlayIcon />
-                  </Overlay>
+                  <VideoCard>
+                    <VideoPreview
+                      ref={(el) => (mobileVideoRefs.current[i] = el)}
+                      muted
+                      preload="metadata"
+                      src={src}
+                    />
+                    <Overlay
+                      hidden={
+                        playingIndex === i &&
+                        !mobileVideoRefs.current[i]?.paused
+                      }
+                    >
+                      <PlayIcon />
+                    </Overlay>
+                  </VideoCard>
                 </MobileSlide>
               ))}
             </MobileSlider>
@@ -218,7 +241,26 @@ export default function TimeLandscapeVideoSection() {
 }
 
 /* ================================================
-   스타일
+   공통 fade-up 믹스인
+================================================ */
+
+const fadeUpMixin = css<{ $inView?: boolean }>`
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
+`;
+
+/* ================================================
+   기본 레이아웃
 ================================================ */
 
 const Section = styled.section`
@@ -238,6 +280,10 @@ const Inner = styled.div`
   max-width: 1200px;
 `;
 
+const TitleWrapper = styled.div<{ $inView?: boolean }>`
+  ${fadeUpMixin};
+`;
+
 const Title = styled.h2`
   font-size: 32px;
   font-weight: 700;
@@ -251,45 +297,90 @@ const Title = styled.h2`
   }
 `;
 
-/* ---------- PC SLIDER ---------- */
+/* ================================================
+   PC 슬라이더 (3장 레이아웃)
+================================================ */
 
-const DesktopWrapper = styled.div`
+const DesktopWrapper = styled.div<{ $inView?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     display: none;
   }
 `;
 
-const DesktopViewport = styled.div`
+/**
+ * 카드들이 모두 겹쳐지는 "무대"
+ * 왼쪽/오른쪽 카드는 transform 으로만 위치 조정
+ */
+const DesktopStage = styled.div`
+  position: relative;
   width: 100%;
-  max-width: 900px;
-  overflow: hidden;
+  max-width: 1000px;
+  height: 640px; /* 중앙 카드 높이 확보용 */
 `;
 
-const DesktopTrack = styled.div`
-  display: flex;
-  transition: transform 0.5s ease;
-`;
-
-const DesktopSlide = styled.div`
-  flex: 0 0 100%;
-  display: flex;
-  justify-content: center;
-`;
-
-const VideoCard = styled.div`
+/* 공통 카드 베이스 */
+const VideoCardBase = styled.div`
+  position: absolute;
+  top: 0;
+  left: 50%;
   width: 40%;
   max-width: 420px;
   aspect-ratio: 9 / 16;
-  position: relative;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
   border-radius: 16px;
   overflow: hidden;
-  cursor: pointer;
+  background: #000;
+`;
+
+const DesktopCard = styled(VideoCardBase)<{ $position: DesktopPosition }>`
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  transform-origin: center center;
+  transition:
+    transform 0.5s ease,
+    opacity 0.5s ease,
+    box-shadow 0.5s ease;
+  cursor: ${({ $position }) =>
+    $position === 'center' ? 'pointer' : 'default'};
+  pointer-events: ${({ $position }) =>
+    $position === 'center' ? 'auto' : 'none'};
+
+  ${({ $position }) => {
+    switch ($position) {
+      case 'center':
+        return css`
+          transform: translateX(-50%) scale(1);
+          opacity: 1;
+          z-index: 3;
+        `;
+      case 'left':
+        return css`
+          transform: translateX(calc(-50% - 260px)) scale(0.86);
+          opacity: 0.4;
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+          z-index: 2;
+        `;
+      case 'right':
+        return css`
+          transform: translateX(calc(-50% + 260px)) scale(0.86);
+          opacity: 0.4;
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+          z-index: 2;
+        `;
+      case 'out':
+      default:
+        return css`
+          transform: translateX(-50%) scale(0.8);
+          opacity: 0;
+          box-shadow: none;
+          z-index: 1;
+        `;
+    }
+  }}
 `;
 
 const VideoPreview = styled.video`
@@ -297,14 +388,14 @@ const VideoPreview = styled.video`
   height: 100%;
   object-fit: cover;
   display: block;
-  background: #000;
 `;
 
-const Overlay = styled.div<{ hidden?: boolean }>`
+// 기존
+// const Overlay = styled.div<{ hidden?: boolean }>` ...
+
+const Overlay = styled.div<{ hidden?: boolean; $position?: DesktopPosition }>`
   position: absolute;
   inset: 0;
-  background: ${({ hidden }) =>
-    hidden ? 'transparent' : 'rgba(0, 0, 0, 0.25)'};
   display: ${({ hidden }) => (hidden ? 'none' : 'flex')};
   justify-content: center;
   align-items: center;
@@ -360,15 +451,20 @@ const Dot = styled.div<{ active: boolean }>`
   cursor: pointer;
 `;
 
-/* ---------- MOBILE SLIDER ---------- */
+/* ================================================
+   MOBILE 슬라이더 (기존과 거의 동일)
+================================================ */
 
-const MobileWrapper = styled.div`
+const MobileWrapper = styled.div<{ $inView?: boolean }>`
   @media (min-width: 769px) {
     display: none;
   }
+
+  @media (max-width: 768px) {
+    ${fadeUpMixin};
+  }
 `;
 
-/* 🔽 새로 추가된 뷰포트 */
 const MobileViewport = styled.div`
   width: 100%;
   overflow: hidden;
@@ -382,10 +478,17 @@ const MobileSlider = styled.div`
 
 const MobileSlide = styled.div`
   flex: 0 0 100%;
+  display: flex;
+  justify-content: center;
+`;
+
+const VideoCard = styled(VideoCardBase)`
   position: relative;
-  cursor: pointer;
+  transform: translateX(-50%); /* base가 left:50%라서 보정 */
+  width: 100%;
   max-width: 380px;
-  margin: 0 auto;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
 `;
 
 const MobileDots = styled.div`

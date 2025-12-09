@@ -1,6 +1,7 @@
 // src/components/FacilityConstructionSection.tsx
 import React, { useState, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 export default function FacilityConstructionSection() {
   /* ---------------------------- 공통 이미지 ---------------------------- */
@@ -60,11 +61,16 @@ export default function FacilityConstructionSection() {
     }
   };
 
+  /* ---------------------------- inView 훅 ---------------------------- */
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: pcRef, inView: pcInView } = useInViewOnce();
+  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
+
   return (
     <Section>
       <Inner>
         {/* ------------------- TEXT ------------------- */}
-        <TextBlock>
+        <TextBlock ref={textRef} $inView={textInView}>
           <Title>시설물 공사</Title>
           <SubTitle>
             데크공사, 파고라 공사, 블록공사,
@@ -78,7 +84,7 @@ export default function FacilityConstructionSection() {
         </TextBlock>
 
         {/* ------------------- PC 슬라이드 ------------------- */}
-        <PcSliderWrapper>
+        <PcSliderWrapper ref={pcRef} $inView={pcInView}>
           <ArrowLeft onClick={prevPc} />
           <ArrowRight onClick={nextPc} />
 
@@ -101,6 +107,8 @@ export default function FacilityConstructionSection() {
 
         {/* ------------------- MOBILE 슬라이드 (2x2) ------------------- */}
         <MobileSliderWrapper
+          ref={mobileRef}
+          $inView={mobileInView}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -133,6 +141,23 @@ export default function FacilityConstructionSection() {
   );
 }
 
+/* ------------------ 공통 fade-up 믹스인 ------------------ */
+
+const fadeUpMixin = css<{ $inView?: boolean }>`
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+
+  ${({ $inView }) =>
+    $inView &&
+    css`
+      opacity: 1;
+      transform: translateY(0);
+    `}
+`;
+
 /* ------------------ STYLES ------------------ */
 
 const Section = styled.section`
@@ -152,8 +177,9 @@ const Inner = styled.div`
   max-width: 1200px;
 `;
 
-const TextBlock = styled.div`
+const TextBlock = styled.div<{ $inView?: boolean }>`
   margin-bottom: 64px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     text-align: center;
@@ -207,10 +233,11 @@ const MobileBr = styled.br`
 
 /* ------------------- PC SLIDER ------------------- */
 
-const PcSliderWrapper = styled.div`
+const PcSliderWrapper = styled.div<{ $inView?: boolean }>`
   position: relative;
   max-width: 1200px;
   margin: 0 auto 80px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
     display: none;
@@ -261,13 +288,14 @@ const ArrowRight = styled(ArrowLeft)`
 
 /* ------------------- MOBILE SLIDER ------------------- */
 
-const MobileSliderWrapper = styled.div`
+const MobileSliderWrapper = styled.div<{ $inView?: boolean }>`
   display: none;
 
   @media (max-width: 768px) {
     display: block;
     overflow: hidden;
     width: 100%;
+    ${fadeUpMixin};
   }
 `;
 
