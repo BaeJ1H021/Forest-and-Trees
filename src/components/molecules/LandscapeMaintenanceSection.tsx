@@ -208,6 +208,7 @@ const WorkGrid = styled.div<{ $inView?: boolean }>`
     grid-template-columns: repeat(2, minmax(0, 1fr));
     row-gap: 24px;
     margin-bottom: 68px;
+    gap: 10px;
   }
 
   @media (max-width: 768px) {

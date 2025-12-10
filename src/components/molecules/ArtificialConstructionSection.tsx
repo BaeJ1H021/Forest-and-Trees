@@ -168,6 +168,10 @@ const Section = styled.section`
   justify-content: center;
   background-color: #ffffff;
 
+  @media (max-width: 1550px) {
+    padding: 235px 100px;
+  }
+
   @media (max-width: 768px) {
     padding: 180px 20px 144px;
   }
@@ -260,6 +264,10 @@ const PcGroup = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
+
+  @media (max-width: 1550px) {
+    gap: 12px;
+  }
 `;
 
 const PcImgItem = styled.div`
@@ -279,12 +287,24 @@ const ArrowLeft = styled.button`
   background: url('/images/leftArrow.png') center/contain no-repeat;
   border: none;
   cursor: pointer;
+
+  @media (max-width: 1550px) {
+    left: -100px;
+    width: 72px;
+    height: 90px;
+  }
 `;
 
 const ArrowRight = styled(ArrowLeft)`
   left: auto;
   right: -180px;
   background: url('/images/rightArrow.png') center/contain no-repeat;
+
+  @media (max-width: 1550px) {
+    right: -100px;
+    width: 72px;
+    height: 90px;
+  }
 `;
 
 /* ------------------- MOBILE SLIDER ------------------- */

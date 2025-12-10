@@ -270,6 +270,10 @@ const Section = styled.section`
   display: flex;
   justify-content: center;
 
+  @media (max-width: 1550px) {
+    padding: 180px 100px;
+  }
+
   @media (max-width: 768px) {
     padding: 150px 20px 120px;
   }
@@ -335,6 +339,10 @@ const VideoCardBase = styled.div`
   border-radius: 16px;
   overflow: hidden;
   background: #000;
+
+  @media (max-width: 1550px) {
+    width: 35%;
+  }
 `;
 
 const DesktopCard = styled(VideoCardBase)<{ $position: DesktopPosition }>`
@@ -363,6 +371,25 @@ const DesktopCard = styled(VideoCardBase)<{ $position: DesktopPosition }>`
           opacity: 0.4;
           box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
           z-index: 2;
+
+          @media (max-width: 1550px) {
+            transform: translateX(calc(-50% - 230px)) scale(0.86);
+          }
+          @media (max-width: 1200px) {
+            transform: translateX(calc(-50% - 200px)) scale(0.86);
+          }
+          @media (max-width: 1100px) {
+            transform: translateX(calc(-50% - 180px)) scale(0.86);
+          }
+          @media (max-width: 1000px) {
+            transform: translateX(calc(-50% - 160px)) scale(0.86);
+          }
+          @media (max-width: 900px) {
+            transform: translateX(calc(-50% - 140px)) scale(0.86);
+          }
+          @media (max-width: 800px) {
+            transform: translateX(calc(-50% - 120px)) scale(0.86);
+          }
         `;
       case 'right':
         return css`
@@ -370,6 +397,25 @@ const DesktopCard = styled(VideoCardBase)<{ $position: DesktopPosition }>`
           opacity: 0.4;
           box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
           z-index: 2;
+
+          @media (max-width: 1550px) {
+            transform: translateX(calc(-50% + 230px)) scale(0.86);
+          }
+          @media (max-width: 1200px) {
+            transform: translateX(calc(-50% + 200px)) scale(0.86);
+          }
+          @media (max-width: 1100px) {
+            transform: translateX(calc(-50% + 180px)) scale(0.86);
+          }
+          @media (max-width: 1000px) {
+            transform: translateX(calc(-50% + 160px)) scale(0.86);
+          }
+          @media (max-width: 900px) {
+            transform: translateX(calc(-50% + 140px)) scale(0.86);
+          }
+          @media (max-width: 800px) {
+            transform: translateX(calc(-50% + 120px)) scale(0.86);
+          }
         `;
       case 'out':
       default:
@@ -429,12 +475,58 @@ const ArrowLeft = styled.button`
   height: 120px;
   border: none;
   cursor: pointer;
+
+  @media (max-width: 1550px) {
+    left: -50px;
+    top: 45%;
+  }
+
+  @media (max-width: 1200px) {
+    width: 60px;
+    height: 90px;
+    top: 42%;
+  }
+
+  @media (max-width: 1100px) {
+    top: 38%;
+  }
+
+  @media (max-width: 900px) {
+    top: 30%;
+  }
+
+  @media (max-width: 800px) {
+    top: 25%;
+  }
 `;
 
 const ArrowRight = styled(ArrowLeft)`
   left: auto;
   right: -100px;
   background: url('/images/rightArrow.png') center/contain no-repeat;
+
+  @media (max-width: 1550px) {
+    right: -50px;
+    top: 45%;
+  }
+
+  @media (max-width: 1200px) {
+    width: 60px;
+    height: 90px;
+    top: 42%;
+  }
+
+  @media (max-width: 1100px) {
+    top: 38%;
+  }
+
+  @media (max-width: 900px) {
+    top: 30%;
+  }
+
+  @media (max-width: 800px) {
+    top: 25%;
+  }
 `;
 
 const Dots = styled.div`

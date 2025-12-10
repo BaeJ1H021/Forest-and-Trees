@@ -259,6 +259,10 @@ const Section = styled.section`
   justify-content: center;
   background-color: #f5f5f5;
 
+  @media (max-width: 1550px) {
+    padding: 235px 100px;
+  }
+
   @media (max-width: 768px) {
     padding: 180px 20px 144px;
   }
@@ -351,6 +355,10 @@ const PcGroup = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* 4개 일렬 */
   gap: 24px;
+
+  @media (max-width: 1550px) {
+    gap: 12px;
+  }
 `;
 
 const PcImgItem = styled.div`
@@ -370,12 +378,24 @@ const ArrowLeft = styled.button`
   background: url('/images/leftArrow.png') center/contain no-repeat;
   border: none;
   cursor: pointer;
+
+  @media (max-width: 1550px) {
+    left: -100px;
+    width: 72px;
+    height: 90px;
+  }
 `;
 
 const ArrowRight = styled(ArrowLeft)`
   left: auto;
   right: -180px;
   background: url('/images/rightArrow.png') center/contain no-repeat;
+
+  @media (max-width: 1550px) {
+    right: -100px;
+    width: 72px;
+    height: 90px;
+  }
 `;
 
 /* ------------------- MOBILE SLIDER ------------------- */
@@ -507,6 +527,10 @@ const BAWebRow = styled.div`
   grid-template-columns: 1fr 80px 1fr;
   gap: 40px;
   align-items: center;
+
+  @media (max-width: 1550px) {
+    gap: 15px;
+  }
 `;
 
 const BAWebCol = styled.div`
@@ -519,6 +543,10 @@ const BAWebGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+
+  @media (max-width: 1550px) {
+    gap: 10px;
+  }
 `;
 
 const BAWebImg = styled.img`

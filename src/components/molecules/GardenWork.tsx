@@ -172,6 +172,10 @@ const Wrapper = styled.div`
   width: 100%;
   padding: 320px 50px;
 
+  @media (max-width: 1550px) {
+    padding: 320px 100px;
+  }
+
   @media (max-width: 768px) {
     padding: 180px 20px;
   }
@@ -261,6 +265,10 @@ const ImageGroup = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
   width: 100%;
+
+  @media (max-width: 1550px) {
+    gap: 12px;
+  }
 `;
 
 const ImageItem = styled.div`
@@ -283,6 +291,12 @@ const ArrowLeft = styled.button`
   cursor: pointer;
   z-index: 10;
 
+  @media (max-width: 1550px) {
+    left: -100px;
+    width: 72px;
+    height: 90px;
+  }
+
   @media (max-width: 768px) {
     display: none;
   }
@@ -299,6 +313,12 @@ const ArrowRight = styled.button`
   border: none;
   cursor: pointer;
   z-index: 10;
+
+  @media (max-width: 1550px) {
+    right: -100px;
+    width: 72px;
+    height: 90px;
+  }
 
   @media (max-width: 768px) {
     display: none;

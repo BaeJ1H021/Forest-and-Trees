@@ -180,7 +180,7 @@ const ImageGrid = styled.div<{ $inView?: boolean }>`
   ${fadeUpMixin}
 
   @media (max-width: 1024px) {
-    column-gap: 20px;
+    column-gap: 10px;
   }
 
   @media (max-width: 768px) {
