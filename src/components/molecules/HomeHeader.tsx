@@ -72,9 +72,15 @@ const CertificateImage = styled.img`
     width: 340px; /* 살짝 줄여주기 */
   }
 
+  @media (max-width: 1050px) {
+    top: 18%;
+    left: 55%; /* 조금 안쪽으로 */
+    width: 340px;
+  }
+
   @media (max-width: 768px) {
     width: 70%;
-    max-width: 340px;
+    max-width: 280px;
     top: auto;
     bottom: 6%;
     left: 50%;
@@ -96,6 +102,16 @@ const ContentWrapper = styled.div`
   @media (max-width: 1700px) {
     top: 38%;
     left: 18%; /* 조금 안쪽으로 */
+  }
+
+  @media (max-width: 1200px) {
+    top: 38%;
+    left: 8%; /* 조금 안쪽으로 */
+  }
+
+  @media (max-width: 1050px) {
+    top: 35%;
+    left: 5%; /* 조금 안쪽으로 */
   }
 
   @media (max-width: 768px) {
@@ -155,6 +171,10 @@ const GradientTitle = styled.h1`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (max-width: 1050px) {
+    font-size: 80px;
+  }
 
   @media (max-width: 768px) {
     font-size: 54px;
