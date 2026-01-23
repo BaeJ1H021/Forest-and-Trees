@@ -1,23 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useInViewOnce } from '../../hooks/useInViewOnce';
 
-const IMAGES = [
-  '/images/garden_work/1.png',
-  '/images/garden_work/2.png',
-  '/images/garden_work/3.png',
-  '/images/garden_work/4.png',
-  '/images/garden_work/5.png',
-  '/images/garden_work/6.png',
-  '/images/garden_work/7.png',
-  '/images/garden_work/8.png',
-];
+// ✅ 20장
+const IMAGES = Array.from({ length: 20 }).map(
+  (_, i) => `/images/garden_work/${i + 1}.jpg`, // 확장자/경로 맞춰줘 (.jpg면 .jpg)
+);
 
 export default function GardenWork() {
-  const [index, setIndex] = useState(0); // 데스크탑: 그룹 인덱스 / 모바일: 이미지 인덱스
+  const [index, setIndex] = useState(0); // ✅ PC/모바일 모두 "1장 단위" 인덱스
   const touchStartX = useRef<number | null>(null);
 
-  const maxDesktopIndex = Math.floor(IMAGES.length / 4); // 4장씩
+  const maxIndex = IMAGES.length; // 총 슬라이드 수(=20)
 
   // ✅ 현재 뷰포트가 모바일인지 여부
   const [isMobile, setIsMobile] = useState(() => {
@@ -45,22 +39,16 @@ export default function GardenWork() {
   const { ref: desktopRef, inView: desktopInView } = useInViewOnce();
   const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
 
-  // ------------------------ DESKTOP ARROWS ------------------------
+  // ------------------------ ARROWS (PC) ------------------------
   const onPrev = () => {
-    setIndex((prev) => {
-      if (prev === 0) return prev; // 맨 왼쪽 → 그대로
-      return prev - 1;
-    });
+    setIndex((prev) => (prev === 0 ? prev : prev - 1));
   };
 
   const onNext = () => {
-    setIndex((prev) => {
-      if (prev === maxDesktopIndex - 1) return prev; // 맨 오른쪽 → 그대로
-      return prev + 1;
-    });
+    setIndex((prev) => (prev === maxIndex - 1 ? prev : prev + 1));
   };
 
-  // ------------------------ MOBILE SWIPE ------------------------
+  // ------------------------ SWIPE (MOBILE) ------------------------
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -71,17 +59,9 @@ export default function GardenWork() {
     const diff = e.changedTouches[0].clientX - touchStartX.current;
 
     if (diff > 50) {
-      // 오른쪽 → 왼쪽 swipe: 이전
-      setIndex((prev) => {
-        if (prev === 0) return prev; // 맨 처음이면 멈춤
-        return prev - 1;
-      });
+      setIndex((prev) => (prev === 0 ? prev : prev - 1));
     } else if (diff < -50) {
-      // 왼쪽 → 오른쪽 swipe: 다음
-      setIndex((prev) => {
-        if (prev === IMAGES.length - 1) return prev; // 맨 끝이면 멈춤
-        return prev + 1;
-      });
+      setIndex((prev) => (prev === maxIndex - 1 ? prev : prev + 1));
     }
   };
 
@@ -100,42 +80,55 @@ export default function GardenWork() {
           </Description>
         </TextBlock>
 
-        {/* -------------------------- DESKTOP VIEW -------------------------- */}
+        {/* -------------------------- DESKTOP (1장씩) -------------------------- */}
         <DesktopContainer ref={desktopRef} $inView={desktopInView}>
-          <ArrowLeft onClick={onPrev} />
-          <ArrowRight onClick={onNext} />
+          <ArrowLeft
+            onClick={onPrev}
+            aria-label="이전"
+            disabled={index === 0}
+          />
+          <ArrowRight
+            onClick={onNext}
+            aria-label="다음"
+            disabled={index === maxIndex - 1}
+          />
 
           <DesktopViewport>
             <DesktopSlider
               style={{ transform: `translateX(-${index * 100}%)` }}
             >
-              {Array.from({ length: maxDesktopIndex }).map((_, groupIndex) => (
-                <ImageGroup key={groupIndex}>
-                  {IMAGES.slice(groupIndex * 4, groupIndex * 4 + 4).map(
-                    (src, i) => (
-                      <ImageItem key={i}>
-                        <img src={src} alt={`정원 이미지 ${i}`} />
-                      </ImageItem>
-                    ),
-                  )}
-                </ImageGroup>
+              {IMAGES.map((src, i) => (
+                <DesktopSlide key={i}>
+                  <SlideImage src={src} alt={`정원 이미지 ${i + 1}`} />
+                </DesktopSlide>
               ))}
             </DesktopSlider>
           </DesktopViewport>
+
+          {/* dots (PC에서도 필요하면 유지) */}
+          <DesktopDots>
+            {IMAGES.map((_, i) => (
+              <Dot key={i} active={i === index} />
+            ))}
+          </DesktopDots>
         </DesktopContainer>
 
-        {/* -------------------------- MOBILE VIEW -------------------------- */}
+        {/* -------------------------- MOBILE (1장씩) -------------------------- */}
         <MobileContainer
           ref={mobileRef}
           $inView={mobileInView}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <MobileSlider style={{ transform: `translateX(-${index * 100}%)` }}>
-            {IMAGES.map((src, i) => (
-              <MobileImage key={i} src={src} />
-            ))}
-          </MobileSlider>
+          <MobileViewport>
+            <MobileSlider style={{ transform: `translateX(-${index * 100}%)` }}>
+              {IMAGES.map((src, i) => (
+                <MobileSlide key={i}>
+                  <SlideImage src={src} alt={`정원 이미지 ${i + 1}`} />
+                </MobileSlide>
+              ))}
+            </MobileSlider>
+          </MobileViewport>
 
           {/* 모바일 인디케이터 */}
           <MobileDots>
@@ -233,10 +226,10 @@ const Description = styled.p`
   }
 `;
 
-/* ----------------- DESKTOP ----------------- */
+/* ----------------- DESKTOP (1장씩) ----------------- */
 
 const DesktopContainer = styled.div<{ $inView?: boolean }>`
-  position: relative; /* 화살표 기준점 */
+  position: relative;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -247,7 +240,6 @@ const DesktopContainer = styled.div<{ $inView?: boolean }>`
   }
 `;
 
-/** 실제 슬라이드 영역만 가리는 뷰포트 */
 const DesktopViewport = styled.div`
   width: 100%;
   overflow: hidden;
@@ -259,30 +251,29 @@ const DesktopSlider = styled.div`
   width: 100%;
 `;
 
-const ImageGroup = styled.div`
-  flex: 0 0 100%; /* 한 그룹이 슬라이더 너비 100% */
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+const DesktopSlide = styled.div`
+  flex: 0 0 100%;
   width: 100%;
-
-  @media (max-width: 1550px) {
-    gap: 12px;
-  }
 `;
 
-const ImageItem = styled.div`
-  img {
-    width: 100%;
-    height: auto;
-  }
+const SlideImage = styled.img`
+  width: 100%;
+  height: auto;
+  display: block;
 `;
 
-/* 화살표: DesktopContainer 기준 중앙, 양쪽 100px */
-const ArrowLeft = styled.button`
+const DesktopDots = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+`;
+
+/* 화살표 */
+const ArrowLeft = styled.button<{ disabled?: boolean }>`
   position: absolute;
   top: 50%;
-  left: -180px; /* grid에서 180px 밖으로 */
+  left: -180px;
   transform: translateY(-50%);
   width: 96px;
   height: 120px;
@@ -291,41 +282,29 @@ const ArrowLeft = styled.button`
   cursor: pointer;
   z-index: 10;
 
+  opacity: ${({ disabled }) => (disabled ? 0.35 : 1)};
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
+
   @media (max-width: 1550px) {
     left: -100px;
     width: 72px;
     height: 90px;
   }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
 `;
 
-const ArrowRight = styled.button`
-  position: absolute;
-  top: 50%;
-  right: -180px; /* grid에서 180px 밖으로 */
-  transform: translateY(-50%);
-  width: 96px;
-  height: 120px;
+const ArrowRight = styled(ArrowLeft)<{ disabled?: boolean }>`
+  left: auto;
+  right: -180px;
   background: url('/images/rightArrow.png') no-repeat center/contain;
-  border: none;
-  cursor: pointer;
-  z-index: 10;
 
   @media (max-width: 1550px) {
     right: -100px;
     width: 72px;
     height: 90px;
   }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
 `;
 
-/* ----------------- MOBILE ----------------- */
+/* ----------------- MOBILE (1장씩) ----------------- */
 
 const MobileContainer = styled.div<{ $inView?: boolean }>`
   display: none;
@@ -333,9 +312,13 @@ const MobileContainer = styled.div<{ $inView?: boolean }>`
   @media (max-width: 768px) {
     display: block;
     width: 100%;
-    overflow: hidden;
     ${fadeUpMixin};
   }
+`;
+
+const MobileViewport = styled.div`
+  width: 100%;
+  overflow: hidden;
 `;
 
 const MobileSlider = styled.div`
@@ -344,21 +327,16 @@ const MobileSlider = styled.div`
   width: 100%;
 `;
 
-const MobileImage = styled.img`
-  width: 100%;
-  height: auto;
+const MobileSlide = styled.div`
   flex: 0 0 100%;
+  width: 100%;
 `;
 
 const MobileDots = styled.div`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-top: 14px;
-  }
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
 `;
 
 const Dot = styled.div<{ active: boolean }>`

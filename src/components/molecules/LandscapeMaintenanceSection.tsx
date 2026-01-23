@@ -1,47 +1,83 @@
-import { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useInViewOnce } from '../../hooks/useInViewOnce';
 
-type BeforeAfterKey = 'before' | 'middle' | 'after';
+// ✅ 20장
+const IMAGES = Array.from({ length: 20 }).map(
+  (_, i) => `/images/landscape_maintenance/${i + 1}.jpg`,
+);
 
 export default function LandscapeMaintenanceSection() {
-  const [activeTab, setActiveTab] = useState<BeforeAfterKey>('before');
+  // index: 데스크탑은 2장/페이지, 모바일은 4장/페이지
+  const [index, setIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
-  // 작업 이미지 4장
-  const workImages = [
-    '/images/landscape_maintenance/1.png',
-    '/images/landscape_maintenance/2.png',
-    '/images/landscape_maintenance/3.png',
-    '/images/landscape_maintenance/4.png',
-  ];
+  // ✅ 현재 뷰포트가 모바일인지 여부
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
 
-  // Before / Middle / After 이미지
-  const beforeAfterImages: Record<BeforeAfterKey, string> = {
-    before: '/images/landscape_maintenance/5.png',
-    middle: '/images/landscape_maintenance/6.png',
-    after: '/images/landscape_maintenance/7.png',
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ✅ PC <-> 모바일 전환 시 인덱스 초기화
+  useEffect(() => {
+    setIndex(0);
+  }, [isMobile]);
+
+  // ✅ 페이지당 개수
+  const DESKTOP_PER_PAGE = 2;
+  const MOBILE_PER_PAGE = 4;
+
+  // ✅ 페이지 수
+  const maxDesktopIndex = useMemo(
+    () => Math.ceil(IMAGES.length / DESKTOP_PER_PAGE),
+    [],
+  );
+  const maxMobileIndex = useMemo(
+    () => Math.ceil(IMAGES.length / MOBILE_PER_PAGE),
+    [],
+  );
+
+  // ✅ 인뷰 훅
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: desktopRef, inView: desktopInView } = useInViewOnce();
+  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
+
+  // ------------------------ DESKTOP ARROWS (2장씩) ------------------------
+  const onPrev = () => setIndex((prev) => (prev === 0 ? prev : prev - 1));
+  const onNext = () =>
+    setIndex((prev) => (prev === maxDesktopIndex - 1 ? prev : prev + 1));
+
+  // ------------------------ MOBILE SWIPE (4장씩 페이지 이동) ------------------------
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
   };
 
-  // 공통 데이터 (PC/모바일 둘 다 사용)
-  const beforeAfterItems: {
-    key: BeforeAfterKey;
-    label: string;
-    src: string;
-  }[] = [
-    { key: 'before', label: '작업전', src: beforeAfterImages.before },
-    { key: 'middle', label: '작업모습', src: beforeAfterImages.middle },
-    { key: 'after', label: '작업후', src: beforeAfterImages.after },
-  ];
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
 
-  // ✅ 스크롤 인뷰 훅
-  const { ref: textRef, inView: textInView } = useInViewOnce();
-  const { ref: workRef, inView: workInView } = useInViewOnce();
-  const { ref: baRef, inView: baInView } = useInViewOnce();
+    if (diff > 50) {
+      // 이전 페이지
+      setIndex((prev) => (prev === 0 ? prev : prev - 1));
+    } else if (diff < -50) {
+      // 다음 페이지
+      setIndex((prev) => (prev === maxMobileIndex - 1 ? prev : prev + 1));
+    }
+  };
 
   return (
     <Section>
       <Inner>
-        {/* 상단 타이틀/설명 */}
+        {/* 텍스트 */}
         <TextBlock ref={textRef} $inView={textInView}>
           <Title>조경 유지관리</Title>
           <SubTitle>
@@ -58,68 +94,84 @@ export default function LandscapeMaintenanceSection() {
           </Description>
         </TextBlock>
 
-        {/* 작업 이미지 4장 */}
-        <WorkGrid ref={workRef} $inView={workInView}>
-          {workImages.map((src, idx) => (
-            <WorkImageWrapper key={idx}>
-              <WorkImage src={src} alt={`작업 사진 ${idx + 1}`} />
-            </WorkImageWrapper>
-          ))}
-        </WorkGrid>
+        {/* -------------------------- DESKTOP (2장씩) -------------------------- */}
+        <DesktopContainer ref={desktopRef} $inView={desktopInView}>
+          <ArrowLeft
+            onClick={onPrev}
+            aria-label="이전"
+            disabled={index === 0}
+          />
+          <ArrowRight
+            onClick={onNext}
+            aria-label="다음"
+            disabled={index === maxDesktopIndex - 1}
+          />
 
-        {/* Before & After */}
-        <BeforeAfterSection ref={baRef} $inView={baInView}>
-          <BAHeader>
-            <BATitle>Before& After</BATitle>
-            <Underline />
-          </BAHeader>
-
-          {/* ✅ 모바일 전용 : 탭 + 한 장씩 */}
-          <MobileBA>
-            <Tabs>
-              {beforeAfterItems.map((item) => (
-                <Tab
-                  key={item.key}
-                  type="button"
-                  $active={activeTab === item.key}
-                  onClick={() => setActiveTab(item.key)}
-                >
-                  {item.label}
-                </Tab>
+          <DesktopViewport>
+            <DesktopSlider
+              style={{ transform: `translateX(-${index * 100}%)` }}
+            >
+              {Array.from({ length: maxDesktopIndex }).map((_, pageIndex) => (
+                <DesktopPage key={pageIndex}>
+                  {IMAGES.slice(
+                    pageIndex * DESKTOP_PER_PAGE,
+                    pageIndex * DESKTOP_PER_PAGE + DESKTOP_PER_PAGE,
+                  ).map((src, i) => (
+                    <ImageItem key={`${pageIndex}-${i}`}>
+                      <img
+                        src={src}
+                        alt={`유지관리 이미지 ${pageIndex * DESKTOP_PER_PAGE + i + 1}`}
+                        loading="lazy"
+                      />
+                    </ImageItem>
+                  ))}
+                </DesktopPage>
               ))}
-            </Tabs>
+            </DesktopSlider>
+          </DesktopViewport>
+        </DesktopContainer>
 
-            <BAImageWrapper>
-              <BAImage
-                src={beforeAfterImages[activeTab]}
-                alt={
-                  activeTab === 'before'
-                    ? '작업 전'
-                    : activeTab === 'middle'
-                      ? '작업 모습'
-                      : '작업 후'
-                }
-              />
-            </BAImageWrapper>
-          </MobileBA>
+        {/* -------------------------- MOBILE (4장씩 = 2x2) -------------------------- */}
+        <MobileContainer
+          ref={mobileRef}
+          $inView={mobileInView}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <MobileViewport>
+            <MobileSlider style={{ transform: `translateX(-${index * 100}%)` }}>
+              {Array.from({ length: maxMobileIndex }).map((_, pageIndex) => (
+                <MobilePage key={pageIndex}>
+                  {IMAGES.slice(
+                    pageIndex * MOBILE_PER_PAGE,
+                    pageIndex * MOBILE_PER_PAGE + MOBILE_PER_PAGE,
+                  ).map((src, i) => (
+                    <MobileImageItem key={`${pageIndex}-${i}`}>
+                      <img
+                        src={src}
+                        alt={`유지관리 이미지 ${pageIndex * MOBILE_PER_PAGE + i + 1}`}
+                        loading="lazy"
+                      />
+                    </MobileImageItem>
+                  ))}
+                </MobilePage>
+              ))}
+            </MobileSlider>
+          </MobileViewport>
 
-          {/* ✅ PC 전용 : 3장 나란히 */}
-          <DesktopBA>
-            {beforeAfterItems.map((item) => (
-              <BACol key={item.key}>
-                <BAImageDesktop src={item.src} alt={item.label} />
-                <BACaption>{item.label}</BACaption>
-              </BACol>
+          {/* ✅ 페이지 기준 dots */}
+          <MobileDots>
+            {Array.from({ length: maxMobileIndex }).map((_, i) => (
+              <Dot key={i} $active={i === index} />
             ))}
-          </DesktopBA>
-        </BeforeAfterSection>
+          </MobileDots>
+        </MobileContainer>
       </Inner>
     </Section>
   );
 }
 
-/* ===== 애니메이션 공통 스타일 믹스인 ===== */
-
+/* ===== fade-up 믹스인 ===== */
 const fadeUpMixin = css<{ $inView?: boolean }>`
   opacity: 0;
   transform: translateY(40px);
@@ -135,7 +187,7 @@ const fadeUpMixin = css<{ $inView?: boolean }>`
     `}
 `;
 
-/* ===== styled-components ===== */
+/* ===== styles ===== */
 
 const Section = styled.section`
   width: 100%;
@@ -151,17 +203,19 @@ const Section = styled.section`
 const Inner = styled.div`
   width: 100%;
   max-width: 1200px;
+
+  @media (max-width: 768px) {
+    text-align: center;
+  }
 `;
 
-/* 상단 텍스트 영역 */
 const TextBlock = styled.div<{ $inView?: boolean }>`
   max-width: 520px;
   margin-bottom: 64px;
   ${fadeUpMixin};
 
   @media (max-width: 768px) {
-    margin: 0 auto 64px;
-    text-align: center;
+    margin: 0 auto 48px;
   }
 `;
 
@@ -173,7 +227,7 @@ const Title = styled.h2`
 
   @media (max-width: 768px) {
     font-size: 28px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 `;
 
@@ -185,158 +239,166 @@ const SubTitle = styled.p`
 
   @media (max-width: 768px) {
     font-size: 16px;
-    margin-bottom: 26px;
-    line-height: 1.4;
+    margin-bottom: 18px;
+    line-height: 1.6;
   }
 `;
 
 const Description = styled.p`
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #8e8e8e;
-`;
-
-/* 작업 이미지 4장 그리드 */
-const WorkGrid = styled.div<{ $inView?: boolean }>`
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
-  margin-bottom: 80px;
-  ${fadeUpMixin};
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 24px;
-    margin-bottom: 68px;
-    gap: 10px;
-  }
 
   @media (max-width: 768px) {
-    gap: 10px;
-    margin-bottom: 68px;
+    font-size: 14px;
+    line-height: 2;
+    white-space: pre-line;
   }
 `;
 
-const WorkImageWrapper = styled.div`
+/* ----------------- DESKTOP ----------------- */
+
+const DesktopContainer = styled.div<{ $inView?: boolean }>`
+  position: relative;
   width: 100%;
-  overflow: hidden;
-`;
-
-const WorkImage = styled.img`
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-`;
-
-/* Before & After 공통 영역 */
-
-const BeforeAfterSection = styled.section<{ $inView?: boolean }>`
-  margin-top: 24px;
-  ${fadeUpMixin};
-`;
-
-const BAHeader = styled.div`
-  text-align: center;
-  margin-bottom: 31px;
-
-  @media (max-width: 768px) {
-    margin-bottom: 54px;
-  }
-`;
-
-const BATitle = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
-  color: #005013;
-  margin-bottom: 20px;
-
-  @media (max-width: 768px) {
-    font-size: 18px;
-  }
-`;
-
-const Underline = styled.div`
-  width: 27px;
-  height: 3px;
-  background-color: #005013;
+  max-width: 1200px;
   margin: 0 auto;
-`;
-
-/* 탭 */
-const Tabs = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-bottom: 24px;
+  ${fadeUpMixin};
 
   @media (max-width: 768px) {
-    gap: 42px;
-    margin-bottom: 28px;
-  }
-`;
-
-const Tab = styled.button<{ $active?: boolean }>`
-  border: none;
-  background: none;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px 0;
-  font-weight: ${({ $active }) => ($active ? 700 : 400)};
-  color: ${({ $active }) => ($active ? '#005013' : '#c0c0c0')};
-
-  @media (max-width: 768px) {
-    font-size: 16px;
-  }
-`;
-
-/* 모바일 전용 Before&After (탭 + 한 장) */
-const MobileBA = styled.div`
-  @media (min-width: 769px) {
     display: none;
   }
 `;
 
-const BAImageWrapper = styled.div`
-  max-width: 640px;
-  margin: 0 auto;
-`;
-
-const BAImage = styled.img`
+const DesktopViewport = styled.div`
   width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
+  overflow: hidden;
 `;
 
-/* PC 전용 Before&After (3장 나란히) */
-const DesktopBA = styled.div`
-  display: none;
+const DesktopSlider = styled.div`
+  display: flex;
+  transition: transform 0.5s ease;
+  width: 100%;
+`;
 
-  @media (min-width: 769px) {
-    margin-top: 24px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
+const DesktopPage = styled.div`
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+`;
+
+/** ✅ 여기서 높이 고정 + cover */
+const ImageItem = styled.div`
+  width: 100%;
+  background: #eee;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 `;
 
-const BACol = styled.div`
-  text-align: center;
+const ArrowLeft = styled.button<{ disabled?: boolean }>`
+  position: absolute;
+  top: 50%;
+  left: -180px;
+  transform: translateY(-50%);
+  width: 96px;
+  height: 120px;
+  background: url('/images/leftArrow.png') no-repeat center/contain;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  opacity: ${({ disabled }) => (disabled ? 0.35 : 1)};
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
+
+  @media (max-width: 1550px) {
+    left: -100px;
+    width: 72px;
+    height: 90px;
+  }
 `;
 
-const BAImageDesktop = styled.img`
+const ArrowRight = styled.button<{ disabled?: boolean }>`
+  position: absolute;
+  top: 50%;
+  right: -180px;
+  transform: translateY(-50%);
+  width: 96px;
+  height: 120px;
+  background: url('/images/rightArrow.png') no-repeat center/contain;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  opacity: ${({ disabled }) => (disabled ? 0.35 : 1)};
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
+
+  @media (max-width: 1550px) {
+    right: -100px;
+    width: 72px;
+    height: 90px;
+  }
+`;
+
+/* ----------------- MOBILE (4장씩: 2x2) ----------------- */
+
+const MobileContainer = styled.div<{ $inView?: boolean }>`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    width: 100%;
+    ${fadeUpMixin};
+  }
+`;
+
+const MobileViewport = styled.div`
   width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
+  overflow: hidden;
 `;
 
-const BACaption = styled.p`
-  margin-top: 16px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #5b5b5b;
+const MobileSlider = styled.div`
+  display: flex;
+  transition: transform 0.35s ease-out;
+  width: 100%;
+`;
+
+const MobilePage = styled.div`
+  flex: 0 0 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+`;
+
+/** ✅ 모바일도 높이 고정 + cover */
+const MobileImageItem = styled.div`
+  width: 100%;
+  background: #eee;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+`;
+
+const MobileDots = styled.div`
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+`;
+
+const Dot = styled.div<{ $active: boolean }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: ${(p) => (p.$active ? '#0f4d18' : '#c8d9c8')};
+  transition: background 0.3s;
 `;
 
 const MobileBr = styled.br`
@@ -352,6 +414,6 @@ const MobileSpace = styled.div`
 
   @media (max-width: 768px) {
     display: block;
-    height: 25px;
+    height: 14px;
   }
 `;

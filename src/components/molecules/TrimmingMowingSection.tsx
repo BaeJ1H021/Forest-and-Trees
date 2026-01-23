@@ -1,107 +1,81 @@
 // src/components/TrimmingMowingSection.tsx
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useInViewOnce } from '../../hooks/useInViewOnce';
 
-type BeforeAfterKey = 'before' | 'ongoing' | 'after';
-
 export default function TrimmingMowingSection() {
-  /* ---------------------------- 공통 이미지 ---------------------------- */
-  const TOP_IMAGES = [
-    '/images/trimming_mowing/1.jpg',
-    '/images/trimming_mowing/2.jpg',
-    '/images/trimming_mowing/3.jpg',
-    '/images/trimming_mowing/4.jpg',
-    '/images/trimming_mowing/5.jpg',
-    '/images/trimming_mowing/6.jpg',
-    '/images/trimming_mowing/7.jpg',
-    '/images/trimming_mowing/8.jpg',
-  ];
+  // ✅ 20장 (경로/확장자 필요하면 맞춰줘)
+  const IMAGES = useMemo(
+    () =>
+      Array.from({ length: 20 }).map(
+        (_, i) => `/images/trimming_mowing/${i + 1}.jpg`,
+      ),
+    [],
+  );
 
-  /* ---------------------------- 웹용 Before/After ---------------------------- */
-  const WEB_BEFORE = [
-    '/images/trimming_mowing/web_before_1.jpg',
-    '/images/trimming_mowing/web_before_2.jpg',
-    '/images/trimming_mowing/web_before_3.jpg',
-    '/images/trimming_mowing/web_before_4.jpg',
-  ];
-
-  const WEB_AFTER = [
-    '/images/trimming_mowing/web_after_1.jpg',
-    '/images/trimming_mowing/web_after_2.jpg',
-    '/images/trimming_mowing/web_after_3.jpg',
-    '/images/trimming_mowing/web_after_4.jpg',
-  ];
-
-  /* ---------------------------- 모바일용 Before/After ---------------------------- */
-  const MOBILE_IMAGES: Record<BeforeAfterKey, string> = {
-    before: '/images/trimming_mowing/mobile_before.jpg',
-    ongoing: '/images/trimming_mowing/mobile_ongoing.jpg',
-    after: '/images/trimming_mowing/mobile_after.jpg',
-  };
-
-  const BEFORE_AFTER_ITEMS = [
-    { key: 'before', label: '작업전' },
-    { key: 'ongoing', label: '작업모습' },
-    { key: 'after', label: '작업후' },
-  ];
-
-  /* ---------------------------- PC 슬라이드 (4장씩) ---------------------------- */
-  const [pcIndex, setPcIndex] = useState(0);
-  const maxPcIndex = Math.ceil(TOP_IMAGES.length / 4);
-
-  const [mobileIndex, setMobileIndex] = useState(0);
-  const maxMobileIndex = Math.ceil(TOP_IMAGES.length / 4);
+  // index: 데스크탑은 2장/페이지, 모바일은 4장/페이지
+  const [index, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
 
-  const prevPc = () =>
-    setPcIndex((prev) => {
-      if (prev === 0) return prev; // 맨 왼쪽 → 멈춤
-      return prev - 1;
-    });
+  // ✅ 현재 뷰포트가 모바일인지 여부
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
 
-  const nextPc = () =>
-    setPcIndex((prev) => {
-      if (prev === maxPcIndex - 1) return prev; // 맨 오른쪽 → 멈춤
-      return prev + 1;
-    });
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  /* ---------------------------- 모바일 슬라이드 (4장씩, 2x2) ---------------------------- */
+  // ✅ PC <-> 모바일 전환 시 인덱스 초기화
+  useEffect(() => {
+    setIndex(0);
+  }, [isMobile]);
 
+  // ✅ 페이지당 개수
+  const DESKTOP_PER_PAGE = 2;
+  const MOBILE_PER_PAGE = 4;
+
+  // ✅ 페이지 수
+  const maxDesktopIndex = useMemo(
+    () => Math.ceil(IMAGES.length / DESKTOP_PER_PAGE),
+    [IMAGES.length],
+  );
+  const maxMobileIndex = useMemo(
+    () => Math.ceil(IMAGES.length / MOBILE_PER_PAGE),
+    [IMAGES.length],
+  );
+
+  // ✅ inView 훅
+  const { ref: textRef, inView: textInView } = useInViewOnce();
+  const { ref: desktopRef, inView: desktopInView } = useInViewOnce();
+  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
+
+  // ------------------------ DESKTOP ARROWS (2장씩) ------------------------
+  const onPrev = () => setIndex((prev) => (prev === 0 ? prev : prev - 1));
+  const onNext = () =>
+    setIndex((prev) => (prev === maxDesktopIndex - 1 ? prev : prev + 1));
+
+  // ------------------------ MOBILE SWIPE (4장씩 페이지 이동) ------------------------
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
-
     const diff = e.changedTouches[0].clientX - touchStartX.current;
 
     if (diff > 50) {
-      // 이전 그룹
-      setMobileIndex((prev) => {
-        if (prev === 0) return prev; // 첫 그룹이면 멈춤
-        return prev - 1;
-      });
+      setIndex((prev) => (prev === 0 ? prev : prev - 1));
     } else if (diff < -50) {
-      // 다음 그룹
-      setMobileIndex((prev) => {
-        if (prev === maxMobileIndex - 1) return prev; // 마지막 그룹이면 멈춤
-        return prev + 1;
-      });
+      setIndex((prev) => (prev === maxMobileIndex - 1 ? prev : prev + 1));
     }
   };
-
-  /* ---------------------------- 모바일 BA 탭 ---------------------------- */
-  const [baMobileTab, setBaMobileTab] = useState<BeforeAfterKey>('before');
-
-  /* ---------------------------- inView 훅 ---------------------------- */
-  const { ref: textRef, inView: textInView } = useInViewOnce();
-  const { ref: pcRef, inView: pcInView } = useInViewOnce();
-  const { ref: mobileRef, inView: mobileInView } = useInViewOnce();
-  const { ref: baHeaderRef, inView: baHeaderInView } = useInViewOnce();
-  const { ref: baMobileRef, inView: baMobileInView } = useInViewOnce();
-  const { ref: baDesktopRef, inView: baDesktopInView } = useInViewOnce();
 
   return (
     <Section>
@@ -122,112 +96,78 @@ export default function TrimmingMowingSection() {
           </Description>
         </TextBlock>
 
-        {/* ------------------- PC 슬라이드 ------------------- */}
-        <PcSliderWrapper ref={pcRef} $inView={pcInView}>
-          <ArrowLeft onClick={prevPc} />
-          <ArrowRight onClick={nextPc} />
+        {/* -------------------------- DESKTOP (2장씩) -------------------------- */}
+        <DesktopContainer ref={desktopRef} $inView={desktopInView}>
+          <ArrowLeft
+            onClick={onPrev}
+            aria-label="이전"
+            disabled={index === 0}
+          />
+          <ArrowRight
+            onClick={onNext}
+            aria-label="다음"
+            disabled={index === maxDesktopIndex - 1}
+          />
 
-          <PcViewport>
-            <PcSlider style={{ transform: `translateX(-${pcIndex * 100}%)` }}>
-              {Array.from({ length: maxPcIndex }).map((_, groupIndex) => (
-                <PcGroup key={groupIndex}>
-                  {TOP_IMAGES.slice(groupIndex * 4, groupIndex * 4 + 4).map(
-                    (src, i) => (
-                      <PcImgItem key={i}>
-                        <img src={src} alt={`작업 이미지 ${i + 1}`} />
-                      </PcImgItem>
-                    ),
-                  )}
-                </PcGroup>
+          <DesktopViewport>
+            <DesktopSlider
+              style={{ transform: `translateX(-${index * 100}%)` }}
+            >
+              {Array.from({ length: maxDesktopIndex }).map((_, pageIndex) => (
+                <DesktopPage key={pageIndex}>
+                  {IMAGES.slice(
+                    pageIndex * DESKTOP_PER_PAGE,
+                    pageIndex * DESKTOP_PER_PAGE + DESKTOP_PER_PAGE,
+                  ).map((src, i) => (
+                    <ImageItem key={`${pageIndex}-${i}`}>
+                      <img
+                        src={src}
+                        alt={`전지/예초 이미지 ${pageIndex * DESKTOP_PER_PAGE + i + 1}`}
+                        loading="lazy"
+                      />
+                    </ImageItem>
+                  ))}
+                </DesktopPage>
               ))}
-            </PcSlider>
-          </PcViewport>
-        </PcSliderWrapper>
+            </DesktopSlider>
+          </DesktopViewport>
+        </DesktopContainer>
 
-        {/* ------------------- MOBILE 슬라이드 (2x2) ------------------- */}
-        <MobileSliderWrapper
+        {/* -------------------------- MOBILE (4장씩 = 2x2) -------------------------- */}
+        <MobileContainer
           ref={mobileRef}
           $inView={mobileInView}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <MobileSlider
-            style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
-          >
-            {Array.from({ length: maxMobileIndex }).map((_, groupIndex) => (
-              <MobileGrid key={groupIndex}>
-                {TOP_IMAGES.slice(groupIndex * 4, groupIndex * 4 + 4).map(
-                  (src, i) => (
-                    <MobileImage
-                      key={i}
-                      src={src}
-                      alt={`작업 이미지 ${groupIndex * 4 + i + 1}`}
-                    />
-                  ),
-                )}
-              </MobileGrid>
+          <MobileViewport>
+            <MobileSlider style={{ transform: `translateX(-${index * 100}%)` }}>
+              {Array.from({ length: maxMobileIndex }).map((_, pageIndex) => (
+                <MobilePage key={pageIndex}>
+                  {IMAGES.slice(
+                    pageIndex * MOBILE_PER_PAGE,
+                    pageIndex * MOBILE_PER_PAGE + MOBILE_PER_PAGE,
+                  ).map((src, i) => (
+                    <MobileImageItem key={`${pageIndex}-${i}`}>
+                      <img
+                        src={src}
+                        alt={`전지/예초 이미지 ${pageIndex * MOBILE_PER_PAGE + i + 1}`}
+                        loading="lazy"
+                      />
+                    </MobileImageItem>
+                  ))}
+                </MobilePage>
+              ))}
+            </MobileSlider>
+          </MobileViewport>
+
+          {/* ✅ 페이지 기준 dots */}
+          <MobileDots>
+            {Array.from({ length: maxMobileIndex }).map((_, i) => (
+              <Dot key={i} $active={i === index} />
             ))}
-          </MobileSlider>
-        </MobileSliderWrapper>
-
-        <MobileDots>
-          {Array.from({ length: maxMobileIndex }).map((_, i) => (
-            <Dot key={i} active={i === mobileIndex} />
-          ))}
-        </MobileDots>
-
-        {/* ------------------- Before & After 제목 ------------------- */}
-        <BAHeader ref={baHeaderRef} $inView={baHeaderInView}>
-          <BATitle>Before& After</BATitle>
-          <Underline />
-        </BAHeader>
-
-        {/* ------------------- MOBILE BA (탭 + 1장) ------------------- */}
-        <MobileBA ref={baMobileRef} $inView={baMobileInView}>
-          <Tabs>
-            {BEFORE_AFTER_ITEMS.map((item) => (
-              <Tab
-                key={item.key}
-                $active={baMobileTab === item.key}
-                onClick={() => setBaMobileTab(item.key as BeforeAfterKey)}
-              >
-                {item.label}
-              </Tab>
-            ))}
-          </Tabs>
-
-          <BAImageWrapper>
-            <BAImage src={MOBILE_IMAGES[baMobileTab]} />
-          </BAImageWrapper>
-        </MobileBA>
-
-        {/* ------------------- PC BA (Before 2x2 → 화살표 → After 2x2) ------------------- */}
-        <DesktopBA ref={baDesktopRef} $inView={baDesktopInView}>
-          <BAWebRow>
-            {/* BEFORE 2x2 + 캡션 */}
-            <BAWebCol>
-              <BAWebGrid>
-                {WEB_BEFORE.map((src, i) => (
-                  <BAWebImg key={i} src={src} alt={`작업전 이미지 ${i + 1}`} />
-                ))}
-              </BAWebGrid>
-              <Caption>{'<작업전>'}</Caption>
-            </BAWebCol>
-
-            {/* 가운데 화살표 */}
-            <BAArrowMiddle />
-
-            {/* AFTER 2x2 + 캡션 */}
-            <BAWebCol>
-              <BAWebGrid>
-                {WEB_AFTER.map((src, i) => (
-                  <BAWebImg key={i} src={src} alt={`작업후 이미지 ${i + 1}`} />
-                ))}
-              </BAWebGrid>
-              <Caption>{'<작업후>'}</Caption>
-            </BAWebCol>
-          </BAWebRow>
-        </DesktopBA>
+          </MobileDots>
+        </MobileContainer>
       </Inner>
     </Section>
   );
@@ -327,12 +267,12 @@ const MobileBr = styled.br`
   }
 `;
 
-/* ------------------- PC SLIDER ------------------- */
+/* ----------------- DESKTOP (2장씩 슬라이드) ----------------- */
 
-const PcSliderWrapper = styled.div<{ $inView?: boolean }>`
+const DesktopContainer = styled.div<{ $inView?: boolean }>`
   position: relative;
   max-width: 1200px;
-  margin: 0 auto 80px;
+  margin: 0 auto;
   ${fadeUpMixin};
 
   @media (max-width: 768px) {
@@ -340,20 +280,23 @@ const PcSliderWrapper = styled.div<{ $inView?: boolean }>`
   }
 `;
 
-const PcViewport = styled.div`
+const DesktopViewport = styled.div`
   overflow: hidden;
   width: 100%;
 `;
 
-const PcSlider = styled.div`
+const DesktopSlider = styled.div`
   display: flex;
   transition: transform 0.5s ease;
+  width: 100%;
 `;
 
-const PcGroup = styled.div`
+const DesktopPage = styled.div`
   flex: 0 0 100%;
+  width: 100%;
+
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4개 일렬 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 
   @media (max-width: 1550px) {
@@ -361,14 +304,17 @@ const PcGroup = styled.div`
   }
 `;
 
-const PcImgItem = styled.div`
+const ImageItem = styled.div`
+  width: 100%;
+
   img {
     width: 100%;
     height: auto;
+    display: block;
   }
 `;
 
-const ArrowLeft = styled.button`
+const ArrowLeft = styled.button<{ disabled?: boolean }>`
   position: absolute;
   top: 50%;
   left: -180px;
@@ -378,6 +324,10 @@ const ArrowLeft = styled.button`
   background: url('/images/leftArrow.png') center/contain no-repeat;
   border: none;
   cursor: pointer;
+  z-index: 10;
+
+  opacity: ${({ disabled }) => (disabled ? 0.35 : 1)};
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
 
   @media (max-width: 1550px) {
     left: -100px;
@@ -398,17 +348,21 @@ const ArrowRight = styled(ArrowLeft)`
   }
 `;
 
-/* ------------------- MOBILE SLIDER ------------------- */
+/* ----------------- MOBILE (4장씩: 2x2) ----------------- */
 
-const MobileSliderWrapper = styled.div<{ $inView?: boolean }>`
+const MobileContainer = styled.div<{ $inView?: boolean }>`
   display: none;
 
   @media (max-width: 768px) {
     display: block;
-    overflow: hidden;
     width: 100%;
     ${fadeUpMixin};
   }
+`;
+
+const MobileViewport = styled.div`
+  width: 100%;
+  overflow: hidden;
 `;
 
 const MobileSlider = styled.div`
@@ -417,17 +371,23 @@ const MobileSlider = styled.div`
   transition: transform 0.35s ease-out;
 `;
 
-const MobileGrid = styled.div`
+const MobilePage = styled.div`
   flex: 0 0 100%;
+  width: 100%;
+
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 `;
 
-const MobileImage = styled.img`
+const MobileImageItem = styled.div`
   width: 100%;
-  height: auto;
-  display: block;
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
 `;
 
 const MobileDots = styled.div`
@@ -441,130 +401,9 @@ const MobileDots = styled.div`
   }
 `;
 
-const Dot = styled.div<{ active: boolean }>`
+const Dot = styled.div<{ $active: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${(p) => (p.active ? '#0f4d18' : '#c8d9c8')};
-`;
-
-/* ------------------- BA COMMON ------------------- */
-
-const BAHeader = styled.div<{ $inView?: boolean }>`
-  text-align: center;
-  margin: 120px 0 40px;
-  ${fadeUpMixin};
-
-  @media (max-width: 768px) {
-    margin: 68px 0 54px;
-  }
-`;
-
-const BATitle = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
-  color: #005013;
-  margin-bottom: 20px;
-`;
-
-const Underline = styled.div`
-  width: 27px;
-  height: 3px;
-  background: #005013;
-  margin: 0 auto;
-`;
-
-/* ------------------- MOBILE BA ------------------- */
-
-const MobileBA = styled.div<{ $inView?: boolean }>`
-  @media (min-width: 769px) {
-    display: none;
-  }
-
-  @media (max-width: 768px) {
-    ${fadeUpMixin};
-  }
-`;
-
-const Tabs = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-bottom: 24px;
-`;
-
-const Tab = styled.button<{ $active?: boolean }>`
-  border: none;
-  background: none;
-  font-size: 16px;
-  font-weight: ${(p) => (p.$active ? 700 : 400)};
-  color: ${(p) => (p.$active ? '#005013' : '#c0c0c0')};
-`;
-
-const BAImageWrapper = styled.div`
-  width: 100%;
-`;
-
-const BAImage = styled.img`
-  width: 100%;
-  height: auto;
-`;
-
-/* ------------------- PC BA ------------------- */
-
-const DesktopBA = styled.div<{ $inView?: boolean }>`
-  display: none;
-
-  @media (min-width: 769px) {
-    display: block;
-    margin-top: 40px;
-    ${fadeUpMixin};
-  }
-`;
-
-const BAWebRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 80px 1fr;
-  gap: 40px;
-  align-items: center;
-
-  @media (max-width: 1550px) {
-    gap: 15px;
-  }
-`;
-
-const BAWebCol = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const BAWebGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-
-  @media (max-width: 1550px) {
-    gap: 10px;
-  }
-`;
-
-const BAWebImg = styled.img`
-  width: 100%;
-  height: auto;
-`;
-
-const BAArrowMiddle = styled.div`
-  width: 27px;
-  height: 60px;
-  margin: 0 auto;
-  background: url('/images/trimming_mowing/green_right_arrow.png')
-    center/contain no-repeat;
-`;
-
-const Caption = styled.div`
-  margin-top: 28px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #5b5b5b;
+  background: ${(p) => (p.$active ? '#0f4d18' : '#c8d9c8')};
 `;

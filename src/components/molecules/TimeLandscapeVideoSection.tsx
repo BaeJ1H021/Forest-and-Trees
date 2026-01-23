@@ -133,7 +133,7 @@ export default function TimeLandscapeVideoSection() {
     <Section>
       <Inner>
         <TitleWrapper ref={titleRef} $inView={titleInView}>
-          <Title>시간이 만든 풍경</Title>
+          <Title>숲과 나무가 만든 정원</Title>
         </TitleWrapper>
 
         {/* ================= PC ================= */}

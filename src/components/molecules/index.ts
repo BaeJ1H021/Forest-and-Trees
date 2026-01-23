@@ -8,6 +8,8 @@ import FacilityConstructionSection from './FacilityConstructionSection';
 import ArtificialConstructionSection from './ArtificialConstructionSection';
 import TimeLandscapeVideoSection from './TimeLandscapeVideoSection';
 import BlogCTASection from './BlogCTASection';
+import PartnerSection from './PartnerSection';
+import Award from './Award';
 
 export {
   HomeHeader,
@@ -20,4 +22,6 @@ export {
   ArtificialConstructionSection,
   TimeLandscapeVideoSection,
   BlogCTASection,
+  PartnerSection,
+  Award,
 };

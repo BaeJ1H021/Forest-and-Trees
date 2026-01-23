@@ -1,11 +1,13 @@
 import styled from 'styled-components';
 import {
   ArtificialConstructionSection,
+  Award,
   BlogCTASection,
   FacilityConstructionSection,
   GardenWork,
   HomeHeader,
   LandscapeMaintenanceSection,
+  PartnerSection,
   QuoteBanner,
   TimeLandscapeVideoSection,
   TreeHospitalSection,
@@ -17,6 +19,7 @@ const HomePage = () => {
     <HomePageContainer>
       <HomeHeader />
       <QuoteBanner />
+      <PartnerSection />
       <LandscapeMaintenanceSection />
       <TreeHospitalSection />
       <GardenWork />
@@ -24,6 +27,7 @@ const HomePage = () => {
       <FacilityConstructionSection />
       <ArtificialConstructionSection />
       <TimeLandscapeVideoSection />
+      <Award />
       <BlogCTASection />
     </HomePageContainer>
   );
