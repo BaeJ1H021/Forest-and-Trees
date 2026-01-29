@@ -133,7 +133,7 @@ export default function PartnerSection() {
 
   return (
     <Section>
-      <Title>숲과 나무 협력사</Title>
+      <Title>숲과 나무 레퍼런스</Title>
 
       <Tabs>
         <Tab $active={active === 'school'} onClick={() => setActive('school')}>

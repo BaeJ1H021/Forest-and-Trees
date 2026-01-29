@@ -9,7 +9,6 @@ import {
   LandscapeMaintenanceSection,
   PartnerSection,
   QuoteBanner,
-  TimeLandscapeVideoSection,
   TreeHospitalSection,
   TrimmingMowingSection,
 } from '../components/molecules';
@@ -26,7 +25,6 @@ const HomePage = () => {
       <TrimmingMowingSection />
       <FacilityConstructionSection />
       <ArtificialConstructionSection />
-      <TimeLandscapeVideoSection />
       <Award />
       <BlogCTASection />
     </HomePageContainer>
