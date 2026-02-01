@@ -10,6 +10,7 @@ import TimeLandscapeVideoSection from './TimeLandscapeVideoSection';
 import BlogCTASection from './BlogCTASection';
 import PartnerSection from './PartnerSection';
 import Award from './Award';
+import Footer from './Footer';
 
 export {
   HomeHeader,
@@ -24,4 +25,5 @@ export {
   BlogCTASection,
   PartnerSection,
   Award,
+  Footer,
 };

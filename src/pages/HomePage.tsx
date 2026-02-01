@@ -4,6 +4,7 @@ import {
   Award,
   BlogCTASection,
   FacilityConstructionSection,
+  Footer,
   GardenWork,
   HomeHeader,
   LandscapeMaintenanceSection,
@@ -27,6 +28,7 @@ const HomePage = () => {
       <ArtificialConstructionSection />
       <Award />
       <BlogCTASection />
+      <Footer />
     </HomePageContainer>
   );
 };
