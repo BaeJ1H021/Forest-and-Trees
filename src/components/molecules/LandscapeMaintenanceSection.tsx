@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components';
 import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 // ✅ 20장
-const IMAGES = Array.from({ length: 20 }).map(
+const IMAGES = Array.from({ length: 12 }).map(
   (_, i) => `/images/landscape_maintenance/${i + 1}.jpg`,
 );
 

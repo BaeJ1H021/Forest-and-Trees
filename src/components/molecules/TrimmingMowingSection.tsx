@@ -7,7 +7,7 @@ export default function TrimmingMowingSection() {
   // ✅ 20장 (경로/확장자 필요하면 맞춰줘)
   const IMAGES = useMemo(
     () =>
-      Array.from({ length: 20 }).map(
+      Array.from({ length: 12 }).map(
         (_, i) => `/images/trimming_mowing/${i + 1}.jpg`,
       ),
     [],

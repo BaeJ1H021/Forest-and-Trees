@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components';
 import { useInViewOnce } from '../../hooks/useInViewOnce';
 
 // ✅ 20장 (경로/확장자 프로젝트에 맞게 유지)
-const IMAGES = Array.from({ length: 20 }).map(
+const IMAGES = Array.from({ length: 12 }).map(
   (_, i) => `/images/tree_hospital/${i + 1}.jpg`,
 );
 

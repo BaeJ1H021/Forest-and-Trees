@@ -18,14 +18,6 @@ export default function FacilityConstructionSection() {
     '/images/facility_construction/10.jpg',
     '/images/facility_construction/11.jpg',
     '/images/facility_construction/12.jpg',
-    '/images/facility_construction/13.jpg',
-    '/images/facility_construction/14.jpg',
-    '/images/facility_construction/15.jpg',
-    '/images/facility_construction/16.jpg',
-    '/images/facility_construction/17.jpg',
-    '/images/facility_construction/18.jpg',
-    '/images/facility_construction/19.jpg',
-    '/images/facility_construction/20.jpg',
   ];
 
   /* ---------------------------- PC 슬라이드 (4장씩) ---------------------------- */
